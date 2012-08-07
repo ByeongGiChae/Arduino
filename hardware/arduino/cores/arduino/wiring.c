@@ -96,7 +96,7 @@ unsigned long micros() {
 #ifdef TIFR0
 	if ((TIFR0 & _BV(TOV0)) && (t < 255))
 		m++;
-#elif defined(TIFR0)
+#elif defined(TIFR)
 	if ((TIFR & _BV(TOV0)) && (t < 255))
 		m++;
 #endif
