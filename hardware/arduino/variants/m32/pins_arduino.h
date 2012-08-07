@@ -112,12 +112,12 @@ const uint16_t PROGMEM port_to_input_PGM[] = {
 };
 
 const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
-	PD, PD,	PD, PD,
-	PD, PD,	PD,	PD,
-	PC, PC,	PC,	PC,
-	PC, PC,	PC,	PC,
-	PB, PB,	PB,	PB,
-	PB, PB,	PB,	PB,
+	PD, PD, PD, PD,
+	PD, PD, PD, PD,
+	PC, PC, PC, PC,
+	PC, PC, PC, PC,
+	PB, PB, PB, PB,
+	PB, PB, PB, PB,
 	PA, PA, PA, PA, 
 	PA, PA, PA, PA, 
 };
