@@ -205,7 +205,7 @@ asm("  .section .version\n"
 #define WATCHDOG_500MS  (_BV(WDP2) | _BV(WDP0) | _BV(WDE))
 #define WATCHDOG_1S     (_BV(WDP2) | _BV(WDP1) | _BV(WDE))
 #define WATCHDOG_2S     (_BV(WDP2) | _BV(WDP1) | _BV(WDP0) | _BV(WDE))
-#ifndef __AVR_ATmega8__
+#if (!defined(__AVR_ATmega8__) && !defined(__AVR_ATmega32__))
 #define WATCHDOG_4S     (_BV(WDP3) | _BV(WDE))
 #define WATCHDOG_8S     (_BV(WDP3) | _BV(WDP0) | _BV(WDE))
 #endif
@@ -228,25 +228,32 @@ void uartDelay() __attribute__ ((naked));
 #endif
 void appStart() __attribute__ ((naked));
 
-#if defined(__AVR_ATmega168__)
-#define RAMSTART (0x100)
-#define NRWWSTART (0x3800)
-#elif defined(__AVR_ATmega328P__)
-#define RAMSTART (0x100)
-#define NRWWSTART (0x7000)
-#elif defined (__AVR_ATmega644P__)
+#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega32__)
+	#define RAMSTART (0x60)
+#elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__)
+	#define RAMSTART (0x100)
+#elif defined(__AVR_ATmega1280__)
+	#define RAMSTART (0x200)
+#endif	
+
+#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__) 
+	#define NRWWSTART (0xC00)
+#elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__)
+	#define NRWWSTART (0x1C00)
+#elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega32__)
+	#define NRWWSTART (0x3800)
+#elif defined(__AVR_ATmega1280__)
+	#define NRWWSTART (0xF000)
+#endif	
+	
+#if defined (__AVR_ATmega644P__)
 #define RAMSTART (0x100)
 #define NRWWSTART (0xE000)
 #elif defined(__AVR_ATtiny84__)
 #define RAMSTART (0x100)
 #define NRWWSTART (0x0000)
-#elif defined(__AVR_ATmega1280__)
-#define RAMSTART (0x200)
-#define NRWWSTART (0xE000)
-#elif defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__)
-#define RAMSTART (0x100)
-#define NRWWSTART (0x1800)
 #endif
+/* update NRWWSTART  and RAMSTART according to datasheet- weihong.guan */
 
 /* C zero initialises all global variables. However, that requires */
 /* These definitions are NOT zero initialised, but that doesn't matter */
@@ -280,7 +287,7 @@ int main(void) {
   // If not, uncomment the following instructions:
   // cli();
   asm volatile ("clr __zero_reg__");
-#ifdef __AVR_ATmega8__
+#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega32__)
   SP=RAMEND;  // This is done by hardware reset
 #endif
 
@@ -294,7 +301,7 @@ int main(void) {
   TCCR1B = _BV(CS12) | _BV(CS10); // div 1024
 #endif
 #ifndef SOFT_UART
-#ifdef __AVR_ATmega8__
+#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega32__)
   UCSRA = _BV(U2X); //Double speed mode USART
   UCSRB = _BV(RXEN) | _BV(TXEN);  // enable Rx & Tx
   UCSRC = _BV(URSEL) | _BV(UCSZ1) | _BV(UCSZ0);  // config USART; 8N1

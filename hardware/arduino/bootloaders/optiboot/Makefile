@@ -217,6 +217,9 @@ diecimila_isp: LFUSE = FF
 diecimila_isp: EFUSE = 04
 diecimila_isp: isp
 
+
+
+
 atmega328: TARGET = atmega328
 atmega328: MCU_TARGET = atmega328p
 atmega328: CFLAGS += '-DLED_START_FLASHES=3' '-DBAUD_RATE=115200'
@@ -295,6 +298,7 @@ atmega8_isp: HFUSE = CC
 # 2.7V brownout, Low power xtal (16MHz) 16KCK/14CK+65ms
 atmega8_isp: LFUSE = BF
 atmega8_isp: isp
+
 
 # ATmega88
 #
@@ -417,6 +421,61 @@ luminet_isp: LFUSE = 62
 # Self-programming enable
 luminet_isp: EFUSE = FE
 luminet_isp: isp
+
+# add support to Atmega8L(8MHZ), ATmega168p, ATmega32 - Weihong.Guan
+
+# m8L
+#
+m8L: TARGET = m8L
+m8L: MCU_TARGET = atmega8
+m8L: CFLAGS += '-DLED_START_FLASHES=3' '-DBAUD_RATE=115200'
+m8L: AVR_FREQ = 8000000L 
+m8L: LDSECTIONS  = -Wl,--section-start=.text=0x1e00 -Wl,--section-start=.version=0x1ffe
+m8L: $(PROGRAM)_m8L.hex
+m8L: $(PROGRAM)_m8L.lst
+
+m8L_isp: m8L
+m8L_isp: TARGET = atmega8
+m8L_isp: MCU_TARGET = atmega8
+m8L_isp: LFUSE = A4
+m8L_isp: HFUSE = D4
+m8L_isp: isp
+
+#ATmega32
+#
+m32: TARGET = m32
+m32: MCU_TARGET = atmega32
+m32: CFLAGS += '-DLED_START_FLASHES=3' '-DBAUD_RATE=115200'
+m32: AVR_FREQ = 16000000L 
+m32: LDSECTIONS  = -Wl,--section-start=.text=0x7e00 -Wl,--section-start=.version=0x7ffe
+m32: $(PROGRAM)_m32.hex
+m32: $(PROGRAM)_m32.lst
+
+m32_isp: m32
+m32_isp: TARGET = m32
+m32_isp: MCU_TARGET = atmega32
+m32_isp: LFUSE = BF
+m32_isp: HFUSE = D6
+m32_isp: isp
+
+# m168p
+#
+m168p: TARGET = m168p
+m168p: MCU_TARGET = atmega168p
+m168p: CFLAGS += '-DLED_START_FLASHES=3' '-DBAUD_RATE=115200'
+m168p: AVR_FREQ = 16000000L 
+m168p: $(PROGRAM)_m168p.hex
+m168p: $(PROGRAM)_m168p.lst
+
+m168p_isp: m168p
+m168p_isp: TARGET = m168p
+# 2.7V brownout
+m168p_isp: HFUSE = D5
+# Low power xtal (16MHz) 16KCK/14CK+65ms
+m168p_isp: LFUSE = FF
+# 512 byte boot
+m168p_isp: EFUSE = 04
+m168p_isp: isp
 
 #
 # Generic build instructions

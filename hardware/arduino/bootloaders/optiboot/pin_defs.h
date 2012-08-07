@@ -1,4 +1,4 @@
-#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega88) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__)
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega88) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega32__) || defined(__AVR_ATmega88__)
 /* Onboard LED is connected to pin PB5 in Arduino NG, Diecimila, and Duemilanove */ 
 #define LED_DDR     DDRB
 #define LED_PORT    PORTB
@@ -15,7 +15,7 @@
 #endif
 #endif
 
-#if defined(__AVR_ATmega8__)
+#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega32__)
   //Name conversion R.Wiersma
   #define UCSR0A	UCSRA
   #define UDR0 		UDR
@@ -24,6 +24,10 @@
   #define FE0           FE
   #define TIFR1 	TIFR
   #define WDTCSR	WDTCR
+#endif
+
+#if defined(__AVR_ATmega32__)
+  #define WDCE 		WDTOE
 #endif
 
 /* Luminet support */
