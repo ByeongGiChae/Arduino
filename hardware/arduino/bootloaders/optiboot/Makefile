@@ -435,7 +435,7 @@ m8L: $(PROGRAM)_m8L.hex
 m8L: $(PROGRAM)_m8L.lst
 
 m8L_isp: m8L
-m8L_isp: TARGET = atmega8
+m8L_isp: TARGET = m8L
 m8L_isp: MCU_TARGET = atmega8
 m8L_isp: LFUSE = A4
 m8L_isp: HFUSE = D4
