@@ -7,14 +7,16 @@ int main(void)
 #if defined(USBCON)
 	USBDevice.attach();
 #endif
-	
+
 	setup();
-    
-	for (;;) {
+
+	for (;;)
+	{
 		loop();
-		if (serialEventRun) serialEventRun();
+		if (serialEventRun)
+			serialEventRun();
 	}
-        
+
 	return 0;
 }
 
