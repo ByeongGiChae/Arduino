@@ -112,14 +112,14 @@ const uint16_t PROGMEM port_to_input_PGM[] = {
 };
 
 const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
-	PD, PD, PD, PD,
-	PD, PD, PD, PD,
-	PC, PC, PC, PC,
-	PC, PC, PC, PC,
-	PB, PB, PB, PB,
-	PB, PB, PB, PB,
-	PA, PA, PA, PA, 
-	PA, PA, PA, PA, 
+	PORT_D, PORT_D, PORT_D, PORT_D,
+	PORT_D, PORT_D, PORT_D, PORT_D,
+	PORT_C, PORT_C, PORT_C, PORT_C,
+	PORT_C, PORT_C, PORT_C, PORT_C,
+	PORT_B, PORT_B, PORT_B, PORT_B,
+	PORT_B, PORT_B, PORT_B, PORT_B,
+	PORT_A, PORT_A, PORT_A, PORT_A,
+	PORT_A, PORT_A, PORT_A, PORT_A,
 };
 
 const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {

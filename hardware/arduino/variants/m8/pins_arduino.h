@@ -1,26 +1,26 @@
 /*
-  pins_arduino.h - Pin definition functions for Arduino
-  Part of Arduino - http://www.arduino.cc/
+ pins_arduino.h - Pin definition functions for Arduino
+ Part of Arduino - http://www.arduino.cc/
 
-  Copyright (c) 2007 David A. Mellis
+ Copyright (c) 2007 David A. Mellis
 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
 
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
 
-  You should have received a copy of the GNU Lesser General
-  Public License along with this library; if not, write to the
-  Free Software Foundation, Inc., 59 Temple Place, Suite 330,
-  Boston, MA  02111-1307  USA
+ You should have received a copy of the GNU Lesser General
+ Public License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ Boston, MA  02111-1307  USA
 
-  $Id: wiring.h 249 2007-02-03 16:52:51Z mellis $
-*/
+ $Id: wiring.h 249 2007-02-03 16:52:51Z mellis $
+ */
 
 #ifndef Pins_Arduino_h
 #define Pins_Arduino_h
@@ -32,10 +32,10 @@
 #define analogInputToDigitalPin(p)  ((p < 6) ? (p) + 14 : -1)
 
 #define digitalPinHasPWM(p)         ((p) == 9 || (p) == 10 || (p) == 11)
-static const uint8_t SS   = 10;
+static const uint8_t SS = 10;
 static const uint8_t MOSI = 11;
 static const uint8_t MISO = 12;
-static const uint8_t SCK  = 13;
+static const uint8_t SCK = 13;
 
 static const uint8_t SDA = 18;
 static const uint8_t SCL = 19;
@@ -78,7 +78,8 @@ static const uint8_t A7 = 21;
 // these arrays map port names (e.g. port B) to the
 // appropriate addresses for various functions (e.g. reading
 // and writing)
-const uint16_t PROGMEM port_to_mode_PGM[] = {
+const uint16_t PROGMEM port_to_mode_PGM[] =
+{
 	NOT_A_PORT,
 	NOT_A_PORT,
 	(uint16_t) &DDRB,
@@ -86,7 +87,8 @@ const uint16_t PROGMEM port_to_mode_PGM[] = {
 	(uint16_t) &DDRD,
 };
 
-const uint16_t PROGMEM port_to_output_PGM[] = {
+const uint16_t PROGMEM port_to_output_PGM[] =
+{
 	NOT_A_PORT,
 	NOT_A_PORT,
 	(uint16_t) &PORTB,
@@ -94,7 +96,8 @@ const uint16_t PROGMEM port_to_output_PGM[] = {
 	(uint16_t) &PORTD,
 };
 
-const uint16_t PROGMEM port_to_input_PGM[] = {
+const uint16_t PROGMEM port_to_input_PGM[] =
+{
 	NOT_A_PORT,
 	NOT_A_PORT,
 	(uint16_t) &PINB,
@@ -102,73 +105,27 @@ const uint16_t PROGMEM port_to_input_PGM[] = {
 	(uint16_t) &PIND,
 };
 
-const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
-	PD, /* 0 */
-	PD,
-	PD,
-	PD,
-	PD,
-	PD,
-	PD,
-	PD,
-	PB, /* 8 */
-	PB,
-	PB,
-	PB,
-	PB,
-	PB,
-	PC, /* 14 */
-	PC,
-	PC,
-	PC,
-	PC,
-	PC,
+const uint8_t PROGMEM digital_pin_to_port_PGM[] =
+{
+	PORT_D, PORT_D, PORT_D, PORT_D, PORT_D, PORT_D, PORT_D, PORT_D,
+	PORT_B, PORT_B, PORT_B, PORT_B, PORT_B, PORT_B,
+	PORT_C, PORT_C, PORT_C, PORT_C, PORT_C, PORT_C,
 };
 
-const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
-	_BV(0), /* 0, port D */
-	_BV(1),
-	_BV(2),
-	_BV(3),
-	_BV(4),
-	_BV(5),
-	_BV(6),
-	_BV(7),
-	_BV(0), /* 8, port B */
-	_BV(1),
-	_BV(2),
-	_BV(3),
-	_BV(4),
-	_BV(5),
-	_BV(0), /* 14, port C */
-	_BV(1),
-	_BV(2),
-	_BV(3),
-	_BV(4),
-	_BV(5),
+const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] =
+{
+	_BV(0), _BV(1), _BV(2), _BV(3), _BV(4), _BV(5), _BV(6), _BV(7), _BV(0),
+	_BV(1), _BV(2), _BV(3), _BV(4), _BV(5),
+	_BV(0), _BV(1), _BV(2), _BV(3), _BV(4), _BV(5),
 };
 
-const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
-	NOT_ON_TIMER, /* 0 - port D */
-	NOT_ON_TIMER,
-	NOT_ON_TIMER,	
-	NOT_ON_TIMER,
-	NOT_ON_TIMER,
-	NOT_ON_TIMER,
-	NOT_ON_TIMER,
-	NOT_ON_TIMER,
-	NOT_ON_TIMER, /* 8 - port B */
-	TIMER1A,
-	TIMER1B,
-	TIMER2,
-	NOT_ON_TIMER,
-	NOT_ON_TIMER,
-	NOT_ON_TIMER,
-	NOT_ON_TIMER, /* 14 - port C */
-	NOT_ON_TIMER,
-	NOT_ON_TIMER,
-	NOT_ON_TIMER,
-	NOT_ON_TIMER,
+const uint8_t PROGMEM digital_pin_to_timer_PGM[] =
+{
+	NOT_ON_TIMER, NOT_ON_TIMER, NOT_ON_TIMER, NOT_ON_TIMER,
+	NOT_ON_TIMER, NOT_ON_TIMER, NOT_ON_TIMER, NOT_ON_TIMER,
+	NOT_ON_TIMER, TIMER1A, TIMER1B, TIMER2,
+	NOT_ON_TIMER, NOT_ON_TIMER, NOT_ON_TIMER, NOT_ON_TIMER,
+	NOT_ON_TIMER, NOT_ON_TIMER, NOT_ON_TIMER, NOT_ON_TIMER,
 };
 
 #endif
