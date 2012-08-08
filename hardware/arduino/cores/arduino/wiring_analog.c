@@ -41,6 +41,7 @@ int analogRead(uint8_t pin)
 {
 	uint8_t low, high;
 
+	/*
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 	if (pin >= 54) pin -= 54; // allow for channel or pin numbers
 #elif defined(__AVR_ATmega32U4__)
@@ -50,13 +51,11 @@ int analogRead(uint8_t pin)
 #else
 	if (pin >= 14) pin -= 14; // allow for channel or pin numbers
 #endif
+	*/
 	
-#if defined(__AVR_ATmega32U4__)
 	pin = analogPinToChannel(pin);
-	ADCSRB = (ADCSRB & ~(1 << MUX5)) | (((pin >> 3) & 0x01) << MUX5);
-#elif defined(ADCSRB) && defined(MUX5)
-	// the MUX5 bit of ADCSRB selects whether we're reading from channels
-	// 0 to 7 (MUX5 low) or 8 to 15 (MUX5 high).
+
+#if defined(ADCSRB) && defined(MUX5)
 	ADCSRB = (ADCSRB & ~(1 << MUX5)) | (((pin >> 3) & 0x01) << MUX5);
 #endif
   

@@ -50,6 +50,8 @@ static const uint8_t A5 = 19;
 static const uint8_t A6 = 20;
 static const uint8_t A7 = 21;
 
+#define analogPinToChannel(P)  ((P)-14)
+
 #ifdef ARDUINO_MAIN
 
 // On the Arduino board, digital pins are also used
