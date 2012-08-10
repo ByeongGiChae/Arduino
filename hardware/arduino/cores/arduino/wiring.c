@@ -28,10 +28,11 @@
 
 #define TIMER0_PRESCALE	64
 
-const uint16_t US_PER_TIMER0_OVERFLOW = TIMER0_PRESCALE * 256 / clockCyclesPerMicrosecond(); // typical value: 1024
-const uint8_t US_PER_TIMER0_COUNT = TIMER0_PRESCALE / clockCyclesPerMicrosecond();
+const uint16_t US_PER_TIMER0_OVERFLOW = TIMER0_PRESCALE
+		* 256/ clockCyclesPerMicrosecond(); // typical value: 1024
+//const uint8_t US_PER_TIMER0_COUNT = TIMER0_PRESCALE / clockCyclesPerMicrosecond();
+const uint8_t SCALE_US_PER_TIMER0_COUNT = 2;
 // W.H. Guan: Do this long division just once. US means us unit, microsecond, 10 ^ (-6) second.
-
 
 volatile unsigned long timer0_overflow_count = 0;
 
@@ -46,46 +47,21 @@ SIGNAL(TIMER0_OVF_vect)
 
 unsigned long millis()
 {
-	unsigned long m;
-	uint8_t oldSREG = SREG;
-
-	// disable interrupts while we read timer0_millis or we might get an
-	// inconsistent value (e.g. in the middle of a write to timer0_millis)
-	cli();
-	//m = timer0_millis;
-	m = timer0_overflow_count;
 	// W.H. Guan: a timer0_overflow takes 1024 us, which is closed enough to 1000 us.
-	SREG = oldSREG;
-
-	return m;
+	return timer0_overflow_count;
 }
 
 unsigned long micros()
 {
 	unsigned long m;
-	uint8_t oldSREG = SREG, t;
+	uint8_t t;
 
-	cli();
 	m = timer0_overflow_count;
-#if defined(TCNT0)
+#ifdef TCNT0
 	t = TCNT0;
-#elif defined(TCNT0L)
-	t = TCNT0L;
-#else
-#error TIMER 0 not defined
 #endif
 
-#ifdef TIFR0
-	if ((TIFR0 & _BV(TOV0)) && (t < 255))
-	m++;
-#elif defined(TIFR)
-	if ((TIFR & _BV(TOV0)) && (t < 255))
-	m++;
-#endif
-
-	SREG = oldSREG;
-
-	return (((m << 8) + t) * US_PER_TIMER0_COUNT);
+	return (((m << 8) + t) << SCALE_US_PER_TIMER0_COUNT);
 }
 
 void delay(unsigned long ms)
@@ -172,49 +148,53 @@ void delayMicroseconds(unsigned int us)
 	// W.H. Guan: it is asm function is already defined in <util/delay_basic.h>
 }
 
+void init_tmr0(uint8_t clock_selection)
+{
+	volatile uint8_t * tmr0_reg;
+	#if defined(TCCR0)
+		tmr0_reg = & TCCR0;
+	#elif defined(TCCR0B)
+		tmr0_reg = & TCCR0B;
+	#else
+	#error Timer 0 reg not found
+	#endif
+
+	// set timer 0 prescale factor to 64
+	#if defined(CS02) && defined(CS01) && defined(CS00)
+
+		dbi(*tmr0_reg, CS02, bitRead(clock_selection, 2));
+		dbi(*tmr0_reg, CS01, bitRead(clock_selection, 1));
+		dbi(*tmr0_reg, CS00, bitRead(clock_selection, 0));
+
+	#else
+	#error Timer 0 prescale factor 64 not set correctly
+	#endif
+
+	// enable timer 0 overflow interrupt
+	#if defined(TIMSK) && defined(TOIE0)
+		sbi(TIMSK, TOIE0);
+	#elif defined(TIMSK0) && defined(TOIE0)
+		sbi(TIMSK0, TOIE0);
+	#else
+	#error	Timer 0 overflow interrupt not set correctly
+	#endif
+
+	// on the ATmega168, timer 0 is also used for fast hardware pwm
+	// (using phase-correct PWM would mean that timer 0 overflowed half as often
+	// resulting in different millis() behavior on the ATmega8 and ATmega168)
+	#if defined(TCCR0A) && defined(WGM01)
+		sbi(TCCR0A, WGM01);
+		sbi(TCCR0A, WGM00);
+	#endif
+}
+
 void init()
 {
 	// this needs to be called before setup() or some functions won't
 	// work there
 	sei();
 
-	// on the ATmega168, timer 0 is also used for fast hardware pwm
-	// (using phase-correct PWM would mean that timer 0 overflowed half as often
-	// resulting in different millis() behavior on the ATmega8 and ATmega168)
-#if defined(TCCR0A) && defined(WGM01)
-	sbi(TCCR0A, WGM01);
-	sbi(TCCR0A, WGM00);
-#endif  
-
-	// set timer 0 prescale factor to 64
-#if defined(__AVR_ATmega128__)
-	// CPU specific: different values for the ATmega128
-	sbi(TCCR0, CS02);
-#elif defined(TCCR0) && defined(CS01) && defined(CS00)
-	// this combination is for the standard atmega8
-	sbi(TCCR0, CS01);
-	sbi(TCCR0, CS00);
-#elif defined(TCCR0B) && defined(CS01) && defined(CS00)
-	// this combination is for the standard 168/328/1280/2560
-	sbi(TCCR0B, CS01);
-	sbi(TCCR0B, CS00);
-#elif defined(TCCR0A) && defined(CS01) && defined(CS00)
-	// this combination is for the __AVR_ATmega645__ series
-	sbi(TCCR0A, CS01);
-	sbi(TCCR0A, CS00);
-#else
-#error Timer 0 prescale factor 64 not set correctly
-#endif
-
-	// enable timer 0 overflow interrupt
-#if defined(TIMSK) && defined(TOIE0)
-	sbi(TIMSK, TOIE0);
-#elif defined(TIMSK0) && defined(TOIE0)
-	sbi(TIMSK0, TOIE0);
-#else
-#error	Timer 0 overflow interrupt not set correctly
-#endif
-
+	init_tmr0(3);
 	// timers 1 and 2 are used for phase-correct hardware pwm
 	// this is better for motors as it ensures an even waveform
 	// note, however, that fast pwm mode can achieve a frequency of up
