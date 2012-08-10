@@ -26,42 +26,36 @@
 
 #include "wiring_private.h"
 
-#define TIMER0_PRESCALE	64
+#if F_CPU == 16000000
+#define SCALE_US_PER_TIMER0_COUNT 2
+#elif F_CPU == 8000000
+#define SCALE_US_PER_TIMER0_COUNT 3
+#endif
 
-const uint16_t US_PER_TIMER0_OVERFLOW = TIMER0_PRESCALE
-		* 256/ clockCyclesPerMicrosecond(); // typical value: 1024
-//const uint8_t US_PER_TIMER0_COUNT = TIMER0_PRESCALE / clockCyclesPerMicrosecond();
-const uint8_t SCALE_US_PER_TIMER0_COUNT = 2;
-// W.H. Guan: Do this long division just once. US means us unit, microsecond, 10 ^ (-6) second.
+#define TIMER0_CS_64	3
+#define TIMER1_CS_64	3
+#define TIMER2_CS_64	4
 
 volatile unsigned long timer0_overflow_count = 0;
 
-#if defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
-SIGNAL(TIM0_OVF_vect)
-#else
+// W.H. Guan: Do this long division just once. US means us unit, microsecond, 10 ^ (-6) second.
 SIGNAL(TIMER0_OVF_vect)
-#endif
 {
 	timer0_overflow_count++;
 }
 
+// W.H. Guan: a timer0_overflow takes 1024 us, which is closed enough to 1000 us.
+// 1 millis = 1024 us
 unsigned long millis()
 {
-	// W.H. Guan: a timer0_overflow takes 1024 us, which is closed enough to 1000 us.
 	return timer0_overflow_count;
 }
 
 unsigned long micros()
 {
-	unsigned long m;
-	uint8_t t;
-
-	m = timer0_overflow_count;
-#ifdef TCNT0
-	t = TCNT0;
-#endif
-
-	return (((m << 8) + t) << SCALE_US_PER_TIMER0_COUNT);
+	unsigned long m = (TCNT0 + (timer0_overflow_count << 8))
+			<< SCALE_US_PER_TIMER0_COUNT;
+	return m;
 }
 
 void delay(unsigned long ms)
@@ -148,43 +142,101 @@ void delayMicroseconds(unsigned int us)
 	// W.H. Guan: it is asm function is already defined in <util/delay_basic.h>
 }
 
-void init_tmr0(uint8_t clock_selection)
+void init_timer0(uint8_t clock_selection)
 {
 	volatile uint8_t * tmr0_reg;
-	#if defined(TCCR0)
-		tmr0_reg = & TCCR0;
-	#elif defined(TCCR0B)
-		tmr0_reg = & TCCR0B;
-	#else
+#if defined(TCCR0)
+	tmr0_reg = & TCCR0;
+#elif defined(TCCR0B)
+	tmr0_reg = &TCCR0B;
+#else
 	#error Timer 0 reg not found
-	#endif
+#endif
 
 	// set timer 0 prescale factor to 64
-	#if defined(CS02) && defined(CS01) && defined(CS00)
+#if defined(CS02) && defined(CS01) && defined(CS00)
 
-		dbi(*tmr0_reg, CS02, bitRead(clock_selection, 2));
-		dbi(*tmr0_reg, CS01, bitRead(clock_selection, 1));
-		dbi(*tmr0_reg, CS00, bitRead(clock_selection, 0));
+	dbi(*tmr0_reg, CS02, bitRead(clock_selection, 2));
+	dbi(*tmr0_reg, CS01, bitRead(clock_selection, 1));
+	dbi(*tmr0_reg, CS00, bitRead(clock_selection, 0));
 
-	#else
-	#error Timer 0 prescale factor 64 not set correctly
-	#endif
+#else
+	#error Timer 0 prescale factor not set correctly
+#endif
 
 	// enable timer 0 overflow interrupt
-	#if defined(TIMSK) && defined(TOIE0)
-		sbi(TIMSK, TOIE0);
-	#elif defined(TIMSK0) && defined(TOIE0)
-		sbi(TIMSK0, TOIE0);
-	#else
-	#error	Timer 0 overflow interrupt not set correctly
-	#endif
+#if defined(TIMSK) && defined(TOIE0)
+	sbi(TIMSK, TOIE0);
+#elif defined(TIMSK0) && defined(TOIE0)
+	sbi(TIMSK0, TOIE0);
+#else
+#error	Timer 0 overflow interrupt not set correctly
+#endif
 
 	// on the ATmega168, timer 0 is also used for fast hardware pwm
 	// (using phase-correct PWM would mean that timer 0 overflowed half as often
 	// resulting in different millis() behavior on the ATmega8 and ATmega168)
-	#if defined(TCCR0A) && defined(WGM01)
-		sbi(TCCR0A, WGM01);
-		sbi(TCCR0A, WGM00);
+
+#if defined(TCCR0) && defined(WGM01) && defined(WGM00)
+	sbi(TCCR0, WGM01);
+	sbi(TCCR0, WGM00);
+#elif defined(TCCR0A) && defined(WGM01) && defined(WGM00)
+	sbi(TCCR0A, WGM01);
+	sbi(TCCR0A, WGM00);
+#endif
+}
+
+void init_timer1(uint8_t clock_selection)
+{
+	// timers 1 and 2 are used for phase-correct hardware pwm
+	// this is better for motors as it ensures an even waveform
+	// note, however, that fast pwm mode can achieve a frequency of up
+	// 8 MHz (with a 16 MHz clock) at 50% duty cycle
+
+#if defined(TCCR1B) && defined(CS12) && defined(CS11) && defined(CS10)
+
+	TCCR1B = 0;
+	dbi(TCCR1B, CS12, bitRead(clock_selection, 2));
+	dbi(TCCR1B, CS11, bitRead(clock_selection, 1));
+	dbi(TCCR1B, CS10, bitRead(clock_selection, 0));
+
+#else
+	#error Timer 1 prescale factor not set correctly
+#endif
+
+	// put timer 1 in 8-bit phase correct pwm mode
+#if defined(TCCR1A) && defined(WGM10)
+	sbi(TCCR1A, WGM10);
+#endif
+}
+
+void init_timer2(uint8_t clock_selection)
+{
+	volatile uint8_t * tmr2_reg;
+	#if defined(TCCR2)
+		tmr2_reg = & TCCR2;
+	#elif defined(TCCR0B)
+		tmr2_reg = &TCCR2B;
+	#else
+		#error Timer 2 reg not found
+	#endif
+
+		// set timer 2 prescale factor to clock_selection
+	#if defined(CS22) && defined(CS21) && defined(CS20)
+
+		dbi(*tmr2_reg, CS22, bitRead(clock_selection, 2));
+		dbi(*tmr2_reg, CS21, bitRead(clock_selection, 1));
+		dbi(*tmr2_reg, CS20, bitRead(clock_selection, 0));
+
+	#else
+		#error Timer 2 prescale factor not set correctly
+	#endif
+
+		// put timer 1 in 8-bit phase correct pwm mode
+	#if defined(TCCR2) && defined(WGM20)
+		sbi(TCCR2, WGM20);
+	#elif defined(TCCR2A) && defined(WGM20)
+		sbi(TCCR2A, WGM20);
 	#endif
 }
 
@@ -194,50 +246,9 @@ void init()
 	// work there
 	sei();
 
-	init_tmr0(3);
-	// timers 1 and 2 are used for phase-correct hardware pwm
-	// this is better for motors as it ensures an even waveform
-	// note, however, that fast pwm mode can achieve a frequency of up
-	// 8 MHz (with a 16 MHz clock) at 50% duty cycle
-
-#if defined(TCCR1B) && defined(CS11) && defined(CS10)
-	TCCR1B = 0;
-
-	// set timer 1 prescale factor to 64
-	sbi(TCCR1B, CS11);
-#if F_CPU >= 8000000L
-	sbi(TCCR1B, CS10);
-#endif
-#elif defined(TCCR1) && defined(CS11) && defined(CS10)
-	sbi(TCCR1, CS11);
-#if F_CPU >= 8000000L
-	sbi(TCCR1, CS10);
-#endif
-#endif
-	// put timer 1 in 8-bit phase correct pwm mode
-#if defined(TCCR1A) && defined(WGM10)
-	sbi(TCCR1A, WGM10);
-#elif defined(TCCR1)
-#warning this needs to be finished
-#endif
-
-	// set timer 2 prescale factor to 64
-#if defined(TCCR2) && defined(CS22)
-	sbi(TCCR2, CS22);
-#elif defined(TCCR2B) && defined(CS22)
-	sbi(TCCR2B, CS22);
-#else
-#warning Timer 2 not finished (may not be present on this CPU)
-#endif
-
-	// configure timer 2 for phase correct pwm (8-bit)
-#if defined(TCCR2) && defined(WGM20)
-	sbi(TCCR2, WGM20);
-#elif defined(TCCR2A) && defined(WGM20)
-	sbi(TCCR2A, WGM20);
-#else
-#warning Timer 2 not finished (may not be present on this CPU)
-#endif
+	init_timer0(TIMER0_CS_64);
+	init_timer1(TIMER1_CS_64);
+	init_timer2(TIMER2_CS_64);
 
 #if defined(TCCR3B) && defined(CS31) && defined(WGM30)
 	sbi(TCCR3B, CS31); // set timer 3 prescale factor to 64
