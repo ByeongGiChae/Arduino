@@ -77,7 +77,17 @@ volatile unsigned long timer0_overflow_count = 0;
 #define TIMER_CS(reg, n, clock_selection)	\
 	dbi(reg, CS##n##2, bitRead(clock_selection, 2));	\
 	dbi(reg, CS##n##1, bitRead(clock_selection, 1));	\
-	dbi(reg, CS##n##0, bitRead(clock_selection, 0))		\
+	dbi(reg, CS##n##0, bitRead(clock_selection, 0))
+
+#define TIMER_8BIT_WAVEFORM(reg, n, waveform)	\
+	dbi(reg, WGM##n##1, bitRead(waveform, 1));	\
+	dbi(reg, WGM##n##0, bitRead(waveform, 0))
+
+#define TIMER_16BIT_WAVEFORM(n, waveform)	\
+	dbi(TCCR##n##B, WGM##n##3, bitRead(waveform, 3));	\
+	dbi(TCCR##n##B, WGM##n##2, bitRead(waveform, 2));	\
+	dbi(TCCR##n##A, WGM##n##1, bitRead(waveform, 1));	\
+	dbi(TCCR##n##A, WGM##n##0, bitRead(waveform, 0))
 
 // W.H. Guan: Do this long division just once. US means us unit, microsecond, 10 ^ (-6) second.
 SIGNAL(TIMER0_OVF_vect)
