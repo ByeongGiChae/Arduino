@@ -38,6 +38,18 @@
 
 volatile unsigned long timer0_overflow_count = 0;
 
+#define INIT_TIMER(n)	\
+	sbi(TCCR##n##B, CS##n##1);	\
+	sbi(TCCR##n##B, CS##n##0);	\
+	sbi(TCCR##n##A, WGM##n##0)
+
+
+//#if defined(TCCR5B) && defined(CS51) && defined(WGM50)
+//	sbi(TCCR5B, CS51); // set timer 5 prescale factor to 64
+//	sbi(TCCR5B, CS50);
+//	sbi(TCCR5A, WGM50);// put timer 5 in 8-bit phase correct pwm mode
+//#endif
+
 // W.H. Guan: Do this long division just once. US means us unit, microsecond, 10 ^ (-6) second.
 SIGNAL(TIMER0_OVF_vect)
 {
@@ -53,8 +65,7 @@ unsigned long millis()
 
 unsigned long micros()
 {
-	unsigned long m = (TCNT0 + (timer0_overflow_count << 8))
-			<< SCALE_US_PER_TIMER0_COUNT;
+	unsigned long m = (TCNT0 + (timer0_overflow_count << 8)) << SCALE_US_PER_TIMER0_COUNT;
 	return m;
 }
 
@@ -265,16 +276,18 @@ void init()
 	sbi(TCCR4C, PWM4D);// enable PWM mode for comparator OCR4D
 #else /* beginning of timer4 block for ATMEGA1280 and ATMEGA2560 */
 #if defined(TCCR4B) && defined(CS41) && defined(WGM40)
-	sbi(TCCR4B, CS41); // set timer 4 prescale factor to 64
-	sbi(TCCR4B, CS40);
-	sbi(TCCR4A, WGM40);// put timer 4 in 8-bit phase correct pwm mode
+	INIT_TIMER(4);
+//	sbi(TCCR4B, CS41); // set timer 4 prescale factor to 64
+//	sbi(TCCR4B, CS40);
+//	sbi(TCCR4A, WGM40);// put timer 4 in 8-bit phase correct pwm mode
 #endif
 #endif /* end timer4 block for ATMEGA1280/2560 and similar */	
 
 #if defined(TCCR5B) && defined(CS51) && defined(WGM50)
-	sbi(TCCR5B, CS51); // set timer 5 prescale factor to 64
-	sbi(TCCR5B, CS50);
-	sbi(TCCR5A, WGM50);// put timer 5 in 8-bit phase correct pwm mode
+	INIT_TIMER(5);
+//	sbi(TCCR5B, CS51); // set timer 5 prescale factor to 64
+//	sbi(TCCR5B, CS50);
+//	sbi(TCCR5A, WGM50);// put timer 5 in 8-bit phase correct pwm mode
 #endif
 
 #if defined(ADCSRA)
