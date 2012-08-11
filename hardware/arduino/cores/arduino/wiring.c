@@ -32,23 +32,52 @@
 #define SCALE_US_PER_TIMER0_COUNT 3
 #endif
 
-#define TIMER0_CS_64	3
-#define TIMER1_CS_64	3
-#define TIMER2_CS_64	4
+#define TIMER_WITH_EXT_CLK_CS_NUL	0
+#define TIMER_WITH_EXT_CLK_CS_1		1
+#define TIMER_WITH_EXT_CLK_CS_8		2
+#define TIMER_WITH_EXT_CLK_CS_64	3
+#define TIMER_WITH_EXT_CLK_CS_256	4
+#define TIMER_WITH_EXT_CLK_CS_1024	5
+#define TIMER_WITH_EXT_CLK_CS_EXT_FALL	6
+#define TIMER_WITH_EXT_CLK_CS_EXT_RISE	7
+
+#define TIMER_WITHOUT_EXT_CLK_CS_NUL	0
+#define TIMER_WITHOUT_EXT_CLK_CS_1		1
+#define TIMER_WITHOUT_EXT_CLK_CS_8		2
+#define TIMER_WITHOUT_EXT_CLK_CS_32		3
+#define TIMER_WITHOUT_EXT_CLK_CS_64		4
+#define TIMER_WITHOUT_EXT_CLK_CS_128	5
+#define TIMER_WITHOUT_EXT_CLK_CS_256	6
+#define TIMER_WITHOUT_EXT_CLK_CS_1024	7
+
+#define TIMER_16BIT_WAVEFROM_NORMAL			0
+#define TIMER_16BIT_WAVEFROM_PCPWM_8BIT		1
+#define TIMER_16BIT_WAVEFROM_PCPWM_9BIT		2
+#define TIMER_16BIT_WAVEFROM_PCPWM_10BIT	3
+#define TIMER_16BIT_WAVEFROM_CTC_OCR1A		4
+#define TIMER_16BIT_WAVEFROM_FASTPWM_8BIT	5
+#define TIMER_16BIT_WAVEFROM_FASTPWM_9BIT	6
+#define TIMER_16BIT_WAVEFROM_FASTPWM_10BIT	7
+#define TIMER_16BIT_WAVEFROM_PFCPWM_ICR1	8
+#define TIMER_16BIT_WAVEFROM_PFCPWM_OCR1A	9
+#define TIMER_16BIT_WAVEFROM_PCPWM_ICR1		10
+#define TIMER_16BIT_WAVEFROM_PCPWM_OCR1A	11
+#define TIMER_16BIT_WAVEFROM_CTC_ICR1		12
+#define TIMER_16BIT_WAVEFROM_FASTPWM_ICR1	14
+#define TIMER_16BIT_WAVEFROM_FASTPWM__OCR1A	15
+
+#define TIMER_8BIT_WAVEFORM_NORMAL	0
+#define TIMER_8BIT_WAVEFORM_PCPWM	1
+#define TIMER_8BIT_WAVEFORM_CTC		2
+#define TIMER_8BIT_WAVEFORM_FPWM	3
+
 
 volatile unsigned long timer0_overflow_count = 0;
 
-#define INIT_TIMER(n)	\
-	sbi(TCCR##n##B, CS##n##1);	\
-	sbi(TCCR##n##B, CS##n##0);	\
-	sbi(TCCR##n##A, WGM##n##0)
-
-
-//#if defined(TCCR5B) && defined(CS51) && defined(WGM50)
-//	sbi(TCCR5B, CS51); // set timer 5 prescale factor to 64
-//	sbi(TCCR5B, CS50);
-//	sbi(TCCR5A, WGM50);// put timer 5 in 8-bit phase correct pwm mode
-//#endif
+#define TIMER_CS(reg, n, clock_selection)	\
+	dbi(reg, CS##n##2, bitRead(clock_selection, 2));	\
+	dbi(reg, CS##n##1, bitRead(clock_selection, 1));	\
+	dbi(reg, CS##n##0, bitRead(clock_selection, 0))		\
 
 // W.H. Guan: Do this long division just once. US means us unit, microsecond, 10 ^ (-6) second.
 SIGNAL(TIMER0_OVF_vect)
@@ -155,21 +184,16 @@ void delayMicroseconds(unsigned int us)
 
 void init_timer0(uint8_t clock_selection)
 {
-	volatile uint8_t * tmr0_reg;
-#if defined(TCCR0)
-	tmr0_reg = & TCCR0;
-#elif defined(TCCR0B)
-	tmr0_reg = &TCCR0B;
-#else
-	#error Timer 0 reg not found
-#endif
 
-	// set timer 0 prescale factor to 64
 #if defined(CS02) && defined(CS01) && defined(CS00)
 
-	dbi(*tmr0_reg, CS02, bitRead(clock_selection, 2));
-	dbi(*tmr0_reg, CS01, bitRead(clock_selection, 1));
-	dbi(*tmr0_reg, CS00, bitRead(clock_selection, 0));
+	#if defined(TCCR0)
+		TIMER_CS(TCCR0, 0, clock_selection);
+	#elif defined(TCCR0B)
+		TIMER_CS(TCCR0B, 0, clock_selection);
+	#else
+		#error Timer 0 reg not found
+	#endif
 
 #else
 	#error Timer 0 prescale factor not set correctly
@@ -206,10 +230,7 @@ void init_timer1(uint8_t clock_selection)
 
 #if defined(TCCR1B) && defined(CS12) && defined(CS11) && defined(CS10)
 
-	TCCR1B = 0;
-	dbi(TCCR1B, CS12, bitRead(clock_selection, 2));
-	dbi(TCCR1B, CS11, bitRead(clock_selection, 1));
-	dbi(TCCR1B, CS10, bitRead(clock_selection, 0));
+	TIMER_CS(TCCR1B, 1, clock_selection);
 
 #else
 	#error Timer 1 prescale factor not set correctly
@@ -223,21 +244,16 @@ void init_timer1(uint8_t clock_selection)
 
 void init_timer2(uint8_t clock_selection)
 {
-	volatile uint8_t * tmr2_reg;
-	#if defined(TCCR2)
-		tmr2_reg = & TCCR2;
-	#elif defined(TCCR0B)
-		tmr2_reg = &TCCR2B;
-	#else
-		#error Timer 2 reg not found
-	#endif
-
-		// set timer 2 prescale factor to clock_selection
+	// set timer 2 prescale factor to clock_selection
 	#if defined(CS22) && defined(CS21) && defined(CS20)
 
-		dbi(*tmr2_reg, CS22, bitRead(clock_selection, 2));
-		dbi(*tmr2_reg, CS21, bitRead(clock_selection, 1));
-		dbi(*tmr2_reg, CS20, bitRead(clock_selection, 0));
+		#if defined(TCCR2)
+			TIMER_CS(TCCR2, 2, clock_selection);
+		#elif defined(TCCR2B)
+			TIMER_CS(TCCR2B, 2, clock_selection);
+		#else
+			#error Timer 2 reg not found
+		#endif
 
 	#else
 		#error Timer 2 prescale factor not set correctly
@@ -257,14 +273,13 @@ void init()
 	// work there
 	sei();
 
-	init_timer0(TIMER0_CS_64);
-	init_timer1(TIMER1_CS_64);
-	init_timer2(TIMER2_CS_64);
+	init_timer0(TIMER_WITH_EXT_CLK_CS_64);
+	init_timer1(TIMER_WITH_EXT_CLK_CS_64);
+	init_timer2(TIMER_WITHOUT_EXT_CLK_CS_64);
 
 #if defined(TCCR3B) && defined(CS31) && defined(WGM30)
-	sbi(TCCR3B, CS31); // set timer 3 prescale factor to 64
-	sbi(TCCR3B, CS30);
-	sbi(TCCR3A, WGM30);// put timer 3 in 8-bit phase correct pwm mode
+	TIMER_CS(TCCR3B, 3, TIMER_WITH_EXT_CLK_CS_64)
+//	sbi(TCCR3A, WGM30);// put timer 3 in 8-bit phase correct pwm mode
 #endif
 
 #if defined(TCCR4A) && defined(TCCR4B) && defined(TCCR4D) /* beginning of timer4 block for 32U4 and similar */
@@ -276,18 +291,14 @@ void init()
 	sbi(TCCR4C, PWM4D);// enable PWM mode for comparator OCR4D
 #else /* beginning of timer4 block for ATMEGA1280 and ATMEGA2560 */
 #if defined(TCCR4B) && defined(CS41) && defined(WGM40)
-	INIT_TIMER(4);
-//	sbi(TCCR4B, CS41); // set timer 4 prescale factor to 64
-//	sbi(TCCR4B, CS40);
-//	sbi(TCCR4A, WGM40);// put timer 4 in 8-bit phase correct pwm mode
+	TIMER_CS(TCCR4B, 4, TIMER_WITH_EXT_CLK_CS_64)
+	sbi(TCCR4A, WGM40);// put timer 4 in 8-bit phase correct pwm mode
 #endif
 #endif /* end timer4 block for ATMEGA1280/2560 and similar */	
 
 #if defined(TCCR5B) && defined(CS51) && defined(WGM50)
-	INIT_TIMER(5);
-//	sbi(TCCR5B, CS51); // set timer 5 prescale factor to 64
-//	sbi(TCCR5B, CS50);
-//	sbi(TCCR5A, WGM50);// put timer 5 in 8-bit phase correct pwm mode
+	TIMER_CS(TCCR5B, 5, TIMER_WITH_EXT_CLK_CS_64)
+	sbi(TCCR5A, WGM50);// put timer 5 in 8-bit phase correct pwm mode
 #endif
 
 #if defined(ADCSRA)
