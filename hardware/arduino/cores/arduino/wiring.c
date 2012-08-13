@@ -27,9 +27,13 @@
 #include "wiring_private.h"
 
 #if F_CPU == 16000000
+#define US_PER_TIMER0_COUNT	4
 #define SCALE_US_PER_TIMER0_COUNT 2
+#define TIMER_COUNT_PER_MS	250
 #elif F_CPU == 8000000
+#define US_PER_TIMER0_COUNT	8
 #define SCALE_US_PER_TIMER0_COUNT 3
+#define TIMER_COUNT_PER_MS	125
 #endif
 
 #define TIMER_WITH_EXT_CLK_CS_NUL	0
@@ -78,6 +82,13 @@
 #define TIMER_2BIT_WAVEFORM_CTC		2
 #define TIMER_2BIT_WAVEFORM_FPWM	3
 
+#define ADC_PRECSCALER_DIVISION_2	0
+#define ADC_PRECSCALER_DIVISION_4	2
+#define ADC_PRECSCALER_DIVISION_8	3
+#define ADC_PRECSCALER_DIVISION_16	4
+#define ADC_PRECSCALER_DIVISION_32	5
+#define ADC_PRECSCALER_DIVISION_64	6
+#define ADC_PRECSCALER_DIVISION_128	7
 
 volatile unsigned long timer0_overflow_count = 0;
 
@@ -101,6 +112,11 @@ volatile unsigned long timer0_overflow_count = 0;
 	dbi(TCCR##n##A, WGM##n##1, bitRead(waveform, 1));	\
 	dbi(TCCR##n##A, WGM##n##0, bitRead(waveform, 0))
 
+#define ADC_PRESCALER(division)	\
+	dbi(ADCSRA, ADPS2, bitRead(division, 2));	\
+	dbi(ADCSRA, ADPS1, bitRead(division, 1));	\
+	dbi(ADCSRA, ADPS0, bitRead(division, 0))
+
 // W.H. Guan: Do this long division just once. US means us unit, microsecond, 10 ^ (-6) second.
 SIGNAL(TIMER0_OVF_vect)
 {
@@ -114,22 +130,27 @@ unsigned long millis()
 	return timer0_overflow_count;
 }
 
+inline unsigned long time_stamp()
+{
+	return (TCNT0 + (timer0_overflow_count << 8));
+}
+
 unsigned long micros()
 {
-	unsigned long m = (TCNT0 + (timer0_overflow_count << 8)) << SCALE_US_PER_TIMER0_COUNT;
+	unsigned long m = time_stamp() << SCALE_US_PER_TIMER0_COUNT;
 	return m;
 }
 
 void delay(unsigned long ms)
 {
-	uint16_t start = (uint16_t) micros();
+	uint16_t start = (uint16_t) time_stamp();
 
 	while (ms)
 	{
-		if (((uint16_t) micros() - start) >= 1000)
+		if (((uint16_t) time_stamp() - start) >= TIMER_COUNT_PER_MS)
 		{
 			ms--;
-			start += 1000;
+			start += TIMER_COUNT_PER_MS;
 		}
 	}
 }
@@ -204,86 +225,134 @@ void delayMicroseconds(unsigned int us)
 	// W.H. Guan: it is asm function is already defined in <util/delay_basic.h>
 }
 
+// init Timer0, prescale = 64, waveform = fastpwm, enable overflow interruption
+void initTimer0()
+{
+	#if defined(CS02) && defined(CS01) && defined(CS00)
+
+		#if defined(TCCR0)
+			TIMER_CS(TCCR0, 0, TIMER_WITH_EXT_CLK_CS_64);
+		#elif defined(TCCR0B)
+			TIMER_CS(TCCR0B, 0, TIMER_WITH_EXT_CLK_CS_64);
+		#else
+			#error Timer 0 reg not found
+		#endif
+
+	#else
+		#error Timer 0 prescale factor not set correctly
+	#endif
+
+	#if defined(TCCR0) && defined(WGM01) && defined(WGM00)
+		TIMER_2BIT_WAVEFORM(0, TIMER_2BIT_WAVEFORM_FPWM);
+	#elif defined(TCCR0A) && defined(WGM02) && defined(WGM01) && defined(WGM00)
+		TIMER_3BIT_WAVEFORM(0, TIMER_3BIT_WAVEFORM_FPWM);
+	#endif
+
+	#if defined(TIMSK) && defined(TOIE0)
+		sbi(TIMSK, TOIE0);
+	#elif defined(TIMSK0) && defined(TOIE0)
+		sbi(TIMSK0, TOIE0);
+	#else
+		#error	Timer 0 overflow interrupt not set correctly
+	#endif
+}
+
+// init Timer1, prescale = 64, waveform = phase correct pwm
+void initTimer1()
+{
+	#if defined(TCCR1B) && defined(CS12) && defined(CS11) && defined(CS10)
+		TIMER_CS(TCCR1B, 1, TIMER_WITH_EXT_CLK_CS_64);
+	#else
+		#error Timer 1 prescale factor not set correctly
+	#endif
+
+	#if defined(TCCR1A) && defined(TCCR1B) && defined(WGM13) && defined(WGM12) && defined(WGM11) && defined(WGM10)
+		TIMER_4BIT_WAVEFORM(1, TIMER_4BIT_WAVEFROM_PCPWM_8BIT);
+	#endif
+}
+
+// init Timer2, prescale = 64, waveform = phase correct pwm
+void initTimer2()
+{
+	#if defined(CS22) && defined(CS21) && defined(CS20)
+		#if defined(TCCR2)
+			TIMER_CS(TCCR2, 2, TIMER_WITHOUT_EXT_CLK_CS_64);
+		#elif defined(TCCR2B)
+			TIMER_CS(TCCR2B, 2, TIMER_WITHOUT_EXT_CLK_CS_64);
+		#else
+			#error Timer 2 reg not found
+		#endif
+	#else
+		#error Timer 2 prescale factor not set correctly
+	#endif
+
+	#if defined(TCCR2) && defined(WGM21)  && defined(WGM20)
+		TIMER_2BIT_WAVEFORM(2, TIMER_2BIT_WAVEFORM_PCPWM);
+	#elif defined(TCCR2B) && defined(TCCR2A) && defined(WGM22) && defined(WGM21) && defined(WGM20)
+		TIMER_3BIT_WAVEFORM(2, TIMER_3BIT_WAVEFORM_PCPWM);
+	#endif
+}
+
+// init Timer3, presclae = 64, waveform = phase correct pwm
+void initTimer3()
+{
+	#if defined(TCCR3B) && defined(CS32) && defined(CS31) && defined(CS30)
+		TIMER_CS(TCCR3B, 3, TIMER_WITH_EXT_CLK_CS_64)
+	#endif
+
+	#if defined(TCCR3B) && defined(TCCR3A) && defined(WGM33) && defined(WGM32) && defined(WGM31) && defined(WGM30)
+		TIMER_4BIT_WAVEFORM(3, TIMER_4BIT_WAVEFROM_PCPWM_8BIT);
+	#endif
+}
+
+// init Timer4, presclae = 64, waveform = phase correct pwm
+void initTimer4()
+{
+	#if defined(TCCR4B) && defined(CS42) && defined(CS41) && defined(CS40)
+		TIMER_CS(TCCR4B, 4, TIMER_WITH_EXT_CLK_CS_64)
+	#endif
+
+	#if defined(TCCR4B) && defined(TCCR4A) && defined(WGM43) && defined(WGM42) && defined(WGM41) && defined(WGM40)
+		TIMER_4BIT_WAVEFORM(4, TIMER_4BIT_WAVEFROM_PCPWM_8BIT);
+	#endif
+}
+
+// init Timer5, presclae = 64, waveform = phase correct pwm
+void initTimer5()
+{
+	#if defined(TCCR5B) && defined(CS52) && defined(CS51) && defined(CS50)
+		TIMER_CS(TCCR5B, 5, TIMER_WITH_EXT_CLK_CS_64)
+	#endif
+
+	#if defined(TCCR5B) && defined(TCCR5A) && defined(WGM53) && defined(WGM52) && defined(WGM51) && defined(WGM50)
+		TIMER_4BIT_WAVEFORM(5, TIMER_4BIT_WAVEFROM_PCPWM_8BIT);
+	#endif
+}
+
+void initADC()
+{
+#if defined(ADCSRA)
+	// set a2d prescale factor to 128
+	// 16 MHz / 128 = 125 KHz, inside the desired 50-200 KHz range.
+	// XXX: this will not work properly for other clock speeds, and
+	// this code should use F_CPU to determine the prescale factor.
+	ADC_PRESCALER(ADC_PRECSCALER_DIVISION_128);
+	// enable a2d conversions
+	sbi(ADCSRA, ADEN);
+#endif
+}
+
 void init()
 {
 	// this needs to be called before setup() or some functions won't work there
 	sei();
 
-	// init Timer0, prescale = 64, waveform = fastpwm, enable overflow interruption
-	{
-		#if defined(CS02) && defined(CS01) && defined(CS00)
+	initTimer0();
+	initTimer1();
 
-			#if defined(TCCR0)
-				TIMER_CS(TCCR0, 0, TIMER_WITH_EXT_CLK_CS_64);
-			#elif defined(TCCR0B)
-				TIMER_CS(TCCR0B, 0, TIMER_WITH_EXT_CLK_CS_64);
-			#else
-				#error Timer 0 reg not found
-			#endif
+	initTimer2();
+	initTimer3();
 
-		#else
-			#error Timer 0 prescale factor not set correctly
-		#endif
-
-		#if defined(TCCR0) && defined(WGM01) && defined(WGM00)
-			TIMER_2BIT_WAVEFORM(0, TIMER_2BIT_WAVEFORM_FPWM);
-		#elif defined(TCCR0A) && defined(WGM02) && defined(WGM01) && defined(WGM00)
-			TIMER_3BIT_WAVEFORM(0, TIMER_3BIT_WAVEFORM_FPWM);
-		#endif
-
-		#if defined(TIMSK) && defined(TOIE0)
-			sbi(TIMSK, TOIE0);
-		#elif defined(TIMSK0) && defined(TOIE0)
-			sbi(TIMSK0, TOIE0);
-		#else
-			#error	Timer 0 overflow interrupt not set correctly
-		#endif
-	}
-
-	// init Timer1, prescale = 64, waveform = phase correct pwm
-	{
-		#if defined(TCCR1B) && defined(CS12) && defined(CS11) && defined(CS10)
-			TIMER_CS(TCCR1B, 1, TIMER_WITH_EXT_CLK_CS_64);
-		#else
-			#error Timer 1 prescale factor not set correctly
-		#endif
-
-		#if defined(TCCR1A) && defined(TCCR1B) && defined(WGM13) && defined(WGM12) && defined(WGM11) && defined(WGM10)
-			TIMER_4BIT_WAVEFORM(1, TIMER_4BIT_WAVEFROM_PCPWM_8BIT);
-		#endif
-	}
-
-	// init Timer2, prescale = 64, waveform = phase correct pwm
-	{
-		#if defined(CS22) && defined(CS21) && defined(CS20)
-			#if defined(TCCR2)
-				TIMER_CS(TCCR2, 2, TIMER_WITHOUT_EXT_CLK_CS_64);
-			#elif defined(TCCR2B)
-				TIMER_CS(TCCR2B, 2, TIMER_WITHOUT_EXT_CLK_CS_64);
-			#else
-				#error Timer 2 reg not found
-			#endif
-		#else
-			#error Timer 2 prescale factor not set correctly
-		#endif
-
-		#if defined(TCCR2) && defined(WGM21)  && defined(WGM20)
-			TIMER_2BIT_WAVEFORM(2, TIMER_2BIT_WAVEFORM_PCPWM);
-		#elif defined(TCCR2B) && defined(TCCR2A) && defined(WGM22) && defined(WGM21) && defined(WGM20)
-			TIMER_3BIT_WAVEFORM(2, TIMER_3BIT_WAVEFORM_PCPWM);
-		#endif
-	}
-
-	// init Timer3, presclae = 64, waveform = phase correct pwm
-	{
-		#if defined(TCCR3B) && defined(CS32) && defined(CS31) && defined(CS30)
-			TIMER_CS(TCCR3B, 3, TIMER_WITH_EXT_CLK_CS_64)
-		#endif
-
-		#if defined(TCCR3B) && defined(TCCR3A) && defined(WGM33) && defined(WGM32) && defined(WGM31) && defined(WGM30)
-			TIMER_4BIT_WAVEFORM(3, TIMER_4BIT_WAVEFROM_PCPWM_8BIT);
-		#endif
-	}
 
 #if defined(TCCR4A) && defined(TCCR4B) && defined(TCCR4D) /* beginning of timer4 block for 32U4 and similar */
 	sbi(TCCR4B, CS42); // set timer4 prescale factor to 64
@@ -293,41 +362,12 @@ void init()
 	sbi(TCCR4A, PWM4A);// enable PWM mode for comparator OCR4A
 	sbi(TCCR4C, PWM4D);// enable PWM mode for comparator OCR4D
 #else
-	// init Timer4, presclae = 64, waveform = phase correct pwm
-	{
-		#if defined(TCCR4B) && defined(CS42) && defined(CS41) && defined(CS40)
-			TIMER_CS(TCCR4B, 4, TIMER_WITH_EXT_CLK_CS_64)
-		#endif
-
-		#if defined(TCCR4B) && defined(TCCR4A) && defined(WGM43) && defined(WGM42) && defined(WGM41) && defined(WGM40)
-			TIMER_4BIT_WAVEFORM(4, TIMER_4BIT_WAVEFROM_PCPWM_8BIT);
-		#endif
-	}
+	initTimer4();
 #endif
 
-	// init Timer5, presclae = 64, waveform = phase correct pwm
-	{
-		#if defined(TCCR5B) && defined(CS52) && defined(CS51) && defined(CS50)
-			TIMER_CS(TCCR5B, 5, TIMER_WITH_EXT_CLK_CS_64)
-		#endif
+	initTimer5();
 
-		#if defined(TCCR5B) && defined(TCCR5A) && defined(WGM53) && defined(WGM52) && defined(WGM51) && defined(WGM50)
-			TIMER_4BIT_WAVEFORM(5, TIMER_4BIT_WAVEFROM_PCPWM_8BIT);
-		#endif
-	}
-
-#if defined(ADCSRA)
-	// set a2d prescale factor to 128
-	// 16 MHz / 128 = 125 KHz, inside the desired 50-200 KHz range.
-	// XXX: this will not work properly for other clock speeds, and
-	// this code should use F_CPU to determine the prescale factor.
-	sbi(ADCSRA, ADPS2);
-	sbi(ADCSRA, ADPS1);
-	sbi(ADCSRA, ADPS0);
-
-	// enable a2d conversions
-	sbi(ADCSRA, ADEN);
-#endif
+	initADC();
 
 	// the bootloader connects pins 0 and 1 to the USART; disconnect them
 	// here so they can be used as normal digital i/o; they will be
