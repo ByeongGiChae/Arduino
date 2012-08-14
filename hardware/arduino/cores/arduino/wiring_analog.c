@@ -105,10 +105,11 @@ void analogWrite(uint8_t pin, int val)
 		switch(digitalPinToTimer(pin))
 		{
 			// XXX fix needed for atmega8
-			#if defined(TCCR0) && defined(COM00) && !defined(__AVR_ATmega8__)
+			#if defined(TCCR0) && defined(COM01)
 			case TIMER0A:
 				// connect pwm to pin on timer 0
-				sbi(TCCR0, COM00);
+				//sbi(TCCR0, COM00);
+				sbi(TCCR0, COM01);
 				OCR0 = val; // set pwm duty
 				break;
 			#endif
