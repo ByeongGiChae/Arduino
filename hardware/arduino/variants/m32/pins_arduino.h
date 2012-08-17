@@ -51,7 +51,7 @@ static const uint8_t A5 = 29;
 static const uint8_t A6 = 30;
 static const uint8_t A7 = 31;
 
-#define analogPinToChannel(P)  ((P)-24)
+#define analogPinToChannel(p)  ((p)>=24?(p)-24:(p))
 
 #ifdef ARDUINO_MAIN
 

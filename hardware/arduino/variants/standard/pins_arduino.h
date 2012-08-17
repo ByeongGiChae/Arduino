@@ -51,7 +51,7 @@ static const uint8_t A5 = 19;
 static const uint8_t A6 = 20;
 static const uint8_t A7 = 21;
 
-#define analogPinToChannel(P)  ((P)-14)
+#define analogPinToChannel(p)  ((p)>=14?(p)-14:(p))
 
 #define digitalPinToPCICR(p)    (((p) >= 0 && (p) <= 21) ? (&PCICR) : ((uint8_t *)0))
 #define digitalPinToPCICRbit(p) (((p) <= 7) ? 2 : (((p) <= 13) ? 0 : 1))
