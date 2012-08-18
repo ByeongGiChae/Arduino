@@ -33,23 +33,23 @@
 
 #define digitalPinHasPWM(p)         ((p) == 4 || (p) == 5 || (p) == 7 || (p) == 19)
 
-static const uint8_t SS   = 20;
-static const uint8_t MOSI = 21;
-static const uint8_t MISO = 22;
-static const uint8_t SCK  = 23;
+#define SS  20
+#define MOSI 21
+#define MISO 22
+#define SCK  23
 
-static const uint8_t SDA = 9;
-static const uint8_t SCL = 8;
-static const uint8_t LED_BUILTIN = 23;
+#define SDA 9
+#define SCL 8
+#define LED_BUILTIN 23
 
-static const uint8_t A0 = 24;
-static const uint8_t A1 = 25;
-static const uint8_t A2 = 26;
-static const uint8_t A3 = 27;
-static const uint8_t A4 = 28;
-static const uint8_t A5 = 29;
-static const uint8_t A6 = 30;
-static const uint8_t A7 = 31;
+#define A0 24
+#define A1 25
+#define A2 26
+#define A3 27
+#define A4 28
+#define A5 29
+#define A6 30
+#define A7 31
 
 #define analogPinToChannel(p)  ((p)>=24?(p)-24:(p))
 
