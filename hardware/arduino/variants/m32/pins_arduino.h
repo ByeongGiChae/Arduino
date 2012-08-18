@@ -65,7 +65,7 @@ static const uint8_t A7 = 31;
 //       D16 |  PB0  1|      |40  PA0  | D24 | A0
 //       D17 |  PB1  2|      |39  PA1  | D25 | A1
 //       D18 |  PB2  3|      |38  PA2  | D26 | A2
-//       D19 |  PB3  4|      |37  PA3  | D27 | A3
+// PWM | D19 |  PB3  4|      |37  PA3  | D27 | A3
 //       D20 |  PB4  5|      |36  PA4  | D28 | A4
 //       D21 |  PB5  6|      |35  PA5  | D29 | A5
 //       D22 |  PB6  7|      |34  PA6  | D30 | A6
@@ -79,12 +79,11 @@ static const uint8_t A7 = 31;
 // TXD | D1  |  PD1 15|      |26  PC4  | D12
 //       D2  |  PD2 16|      |25  PC3  | D11
 //       D3  |  PD3 17|      |24  PC2  | D10
-// PWM | D4  |  PD4 18|      |23  PC1  | D9 | SDA
-// PWM | D5  |  PD5 19|      |22  PC0  | D8 | SCL
-//       D6  |  PD6 20|      |21  PD7  | D7 | PWM
+// PWM | D4  |  PD4 18|      |23  PC1  | D9  | SDA
+// PWM | D5  |  PD5 19|      |22  PC0  | D8  | SCL
+//       D6  |  PD6 20|      |21  PD7  | D7  | PWM
 //                    +------+
 //
-// (PWM+ indicates the additional PWM pins on the ATmega168.)
 
 // these arrays map port names (e.g. port B) to the
 // appropriate addresses for various functions (e.g. reading
