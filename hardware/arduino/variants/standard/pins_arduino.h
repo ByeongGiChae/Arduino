@@ -66,7 +66,7 @@
 
 // ATMEL ATMEGA 168 / 328
 //
-//                     +-\/-+
+//                         +-\/-+
 //        RST |  PC6  1|    |28  PC5  | D19 | A5  | SCL
 //  RXD | D0  |  PD0  2|    |27  PC4  | D18 | A4  | SDA
 //  TXD | D1  |  PD1  3|    |26  PC3  | D17 | A3
@@ -81,7 +81,7 @@
 //  PWM | D6  |  PD6 12|    |17  PB3  | D11 | PWM | MOSI 
 //        D7  |  PD7 13|    |16  PB2  | D10 | PWM | SS
 //        D8  |  PB0 14|    |15  PB1  | D9  | PWM
-//                     +----+
+//                         +----+
 //
 // these arrays map port names (e.g. port B) to the
 // appropriate addresses for various functions (e.g. reading
