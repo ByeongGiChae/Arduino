@@ -40,24 +40,20 @@ void pinMode(uint8_t pin, uint8_t mode)
 	reg = portModeRegister(port);
 	out = portOutputRegister(port);
 
-	if (mode == INPUT) { 
-		uint8_t oldSREG = SREG;
-                cli();
+	uint8_t oldSREG = SREG;
+            cli();
+
+	if (mode == INPUT) {
 		*reg &= ~bit;
 		*out &= ~bit;
-		SREG = oldSREG;
 	} else if (mode == INPUT_PULLUP) {
-		uint8_t oldSREG = SREG;
-                cli();
 		*reg &= ~bit;
 		*out |= bit;
-		SREG = oldSREG;
 	} else {
-		uint8_t oldSREG = SREG;
-                cli();
 		*reg |= bit;
-		SREG = oldSREG;
 	}
+
+	SREG = oldSREG;
 }
 
 // Forcing this inline keeps the callers from having to push their own stuff
