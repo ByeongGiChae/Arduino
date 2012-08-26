@@ -225,21 +225,6 @@ void delayMicroseconds(unsigned int us)
 	// W.H. Guan: it is asm function is already defined in <util/delay_basic.h>
 }
 
-void initADC()
-{
-#if defined(ADCSRA)
-	// set a2d prescale factor to 128
-	// 16 MHz / 128 = 125 KHz, inside the desired 50-200 KHz range.
-	// XXX: this will not work properly for other clock speeds, and
-	// this code should use F_CPU to determine the prescale factor.
-	ADC_PRESCALER(ADC_PRECSCALER_DIVISION_128);
-	// enable a2d conversions
-	sbi(ADCSRA, ADEN);
-#else
-	#error ADC initial fail
-#endif
-}
-
 void init()
 {
 	// this needs to be called before setup() or some functions won't work there
@@ -300,7 +285,17 @@ void init()
 	TIMER_4BIT_WAVEFORM(5, TIMER_4BIT_WAVEFROM_PCPWM_8BIT);
 #endif
 
-	initADC();
+#if defined(ADCSRA)
+	// set a2d prescale factor to 128
+	// 16 MHz / 128 = 125 KHz, inside the desired 50-200 KHz range.
+	// XXX: this will not work properly for other clock speeds, and
+	// this code should use F_CPU to determine the prescale factor.
+	ADC_PRESCALER(ADC_PRECSCALER_DIVISION_128);
+	// enable a2d conversions
+	sbi(ADCSRA, ADEN);
+#else
+	#error ADC initial fail
+#endif
 
 	// the bootloader connects pins 0 and 1 to the USART; disconnect them
 	// here so they can be used as normal digital i/o; they will be
