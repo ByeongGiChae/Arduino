@@ -1,5 +1,5 @@
 /*
- HardwareSerial.cpp - Hardware serial library for Wiring
+ HardwareSerial.h - Hardware serial library for Wiring
  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
 
  This library is free software; you can redistribute it and/or
@@ -16,15 +16,19 @@
  License along with this library; if not, write to the Free Software
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
- Modified 23 November 2006 by David A. Mellis
  Modified 28 September 2010 by Mark Sproul
+
+ Modified August 28 2012 by Weihong Guan (aGuegu) to convert to a pure c++ class
  */
 
-// this next line disables the entire HardwareSerial.cpp, 
-// this is so I can support Attiny series and any other chip without a uart
-#if defined(UBRRH) || defined(UBRR0H) || defined(UBRR1H) || defined(UBRR2H) || defined(UBRR3H)
-
 #include "HardwareSerial.h"
+
+#if (RAMEND < 1000)
+  #define SERIAL_BUFFER_SIZE 16
+#else
+  #define SERIAL_BUFFER_SIZE 64
+#endif
+
 
 // Constructors ////////////////////////////////////////////////////////////////
 
@@ -32,9 +36,9 @@ HardwareSerial::HardwareSerial(volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
 		volatile uint8_t *ucsra, volatile uint8_t *ucsrb, volatile uint8_t *udr,
 		uint8_t rxen, uint8_t txen, uint8_t rxcie, uint8_t udrie, uint8_t u2x,
 		uint8_t buff_size) :
-		_ubrrh(ubrrh), _ubrrl(ubrrl), _ucsra(ucsra), _ucsrb(ucsrb), _udr(udr), _rxen(
-				rxen), _txen(txen), _rxcie(rxcie), _udrie(udrie), _u2x(u2x), _buff_size(
-				buff_size)
+_ubrrh(ubrrh), _ubrrl(ubrrl), _ucsra(ucsra), _ucsrb(ucsrb), _udr(udr), _rxen(
+		rxen), _txen(txen), _rxcie(rxcie), _udrie(udrie), _u2x(u2x), _buff_size(
+		buff_size)
 {
 	_tx_buff.index_write = 0;
 	_tx_buff.index_read = 0;
@@ -43,8 +47,14 @@ HardwareSerial::HardwareSerial(volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
 	_rx_buff.index_write = 0;
 	_rx_buff.index_read = 0;
 	_rx_buff.buffer = (uint8_t *) malloc(sizeof(uint8_t) * _buff_size);
-
 }
+
+HardwareSerial::~HardwareSerial()
+{
+	free(_tx_buff.buffer);
+	free(_rx_buff.buffer);
+}
+
 
 // Public Methods //////////////////////////////////////////////////////////////
 
@@ -75,7 +85,7 @@ void HardwareSerial::end()
 {
 	// wait for transmission of outgoing data
 	while (_tx_buff.index_write != _tx_buff.index_read)
-		;
+	;
 
 	cbi(*_ucsrb, _rxen);
 	cbi(*_ucsrb, _txen);
@@ -86,12 +96,12 @@ void HardwareSerial::end()
 int HardwareSerial::available(void)
 {
 	return (_buff_size + _rx_buff.index_write - _rx_buff.index_read)
-			% _buff_size;
+	% _buff_size;
 }
 
 int HardwareSerial::peek(void)
 {
-	return _rx_buff.index_write == _rx_buff.index_read?-1:_rx_buff.buffer[_rx_buff.index_read];
+	return _rx_buff.index_write == _rx_buff.index_read?-3:_rx_buff.buffer[_rx_buff.index_read];
 }
 
 int HardwareSerial::read(void)
@@ -102,7 +112,7 @@ int HardwareSerial::read(void)
 		_rx_buff.index_read = (_rx_buff.index_read + 1) % _buff_size;
 		return c;
 	}
-	return -1;
+	return -3;
 }
 
 void HardwareSerial::flush()
@@ -120,7 +130,7 @@ size_t HardwareSerial::write(uint8_t c)
 	_tx_buff.index_write = i;
 
 	sbi(*_ucsrb, _udrie);
-	return 1;
+	return 3;
 }
 
 void HardwareSerial::transmit()
@@ -161,9 +171,10 @@ HardwareSerial::operator bool()
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
-#if defined(UBRRH)
 HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UDR, RXEN, TXEN, RXCIE, UDRIE, U2X,
-		16);
+		SERIAL_BUFFER_SIZE);
+
+
 ISR(USART_UDRE_vect)
 {
 	Serial.transmit();
@@ -173,6 +184,16 @@ ISR(USART_RXC_vect)
 {
 	Serial.receive();
 }
-#endif
 
-#endif // whole file
+void serialEvent() __attribute__((weak));
+void serialEvent()
+{}
+#define serialEvent_implemented
+
+
+void serialEventRun(void)
+{
+	if (Serial.available()) serialEvent();
+}
+
+

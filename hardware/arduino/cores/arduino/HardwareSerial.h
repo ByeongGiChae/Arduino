@@ -24,9 +24,9 @@
 #ifndef HardwareSerial_h
 #define HardwareSerial_h
 
-#include <inttypes.h>
-#include <avr/interrupt.h>
 #include "Stream.h"
+#include "wiring_private.h"
+#include "Arduino.h"
 
 struct ring_buff
 {
@@ -42,10 +42,7 @@ public:
 			volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
 			volatile uint8_t *udr, uint8_t rxen, uint8_t txen, uint8_t rxcie,
 			uint8_t udrie, uint8_t u2x, uint8_t buff_size);
-	virtual ~HardwareSerial()
-	{
-	}
-	;
+	virtual ~HardwareSerial();
 	void begin(unsigned long baudrate);
 	void end();
 	virtual int available(void);
@@ -77,21 +74,8 @@ private:
 
 };
 
-#if defined(UBRRH) || defined(UBRR0H)
 extern HardwareSerial Serial;
-#elif defined(USBCON)
-#include "USBAPI.h"
-//  extern HardwareSerial Serial_;  
-#endif
-#if defined(UBRR1H)
-extern HardwareSerial Serial1;
-#endif
-#if defined(UBRR2H)
-extern HardwareSerial Serial2;
-#endif
-#if defined(UBRR3H)
-extern HardwareSerial Serial3;
-#endif
+
 
 extern void serialEventRun(void) __attribute__((weak));
 
