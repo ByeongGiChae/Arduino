@@ -171,6 +171,26 @@ HardwareSerial::operator bool()
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
+#if defined(UBRRH)
+
+HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UDR, RXEN, TXEN, RXCIE, UDRIE, U2X, SERIAL_BUFFER_SIZE);
+
+ISR(USART_UDRE_vect)
+{
+	Serial.transmit();
+}
+
+ISR(USART_RXC_vect)
+{
+	Serial.receive();
+}
+
+void serialEvent() __attribute__((weak));
+void serialEvent() {}
+#define serialEvent_implemented
+#endif
+
+
 #if defined(UBRR0H)
 
 HardwareSerial Serial(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0, RXCIE0, UDRIE0, U2X0,
@@ -188,13 +208,17 @@ ISR(USART_RX_vect)
 }
 
 void serialEvent() __attribute__((weak));
-void serialEvent()
-{}
+void serialEvent() {}
 #define serialEvent_implemented
+#endif
+
+
 
 void serialEventRun(void)
 {
+#ifdef serialEvent_implemented
 	if (Serial.available()) serialEvent();
+#endif
 }
 
-#endif
+
