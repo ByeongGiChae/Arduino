@@ -76,6 +76,17 @@ private:
 
 extern HardwareSerial Serial;
 
+#if defined(UBRR1H)
+extern HardwareSerial Serial1;
+#endif
+
+#if defined(UBRR2H)
+extern HardwareSerial Serial2;
+#endif
+
+#if defined(UBRR3H)
+extern HardwareSerial Serial3;
+#endif
 
 extern void serialEventRun(void) __attribute__((weak));
 
