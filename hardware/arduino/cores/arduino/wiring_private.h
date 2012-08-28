@@ -46,7 +46,7 @@ extern "C"
 #endif
 
 #ifndef dbi
-#define dbi(sfr, bit, val) (val)?sbi(sfr, bit):cbi(sfr,bit)
+#define dbi(sfr, bit, val) (val)?sbi(sfr, bit):cbi(sfr, bit)
 #endif
 
 #define EXTERNAL_INT_0 0
