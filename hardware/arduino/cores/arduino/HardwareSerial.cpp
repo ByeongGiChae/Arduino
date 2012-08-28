@@ -101,7 +101,7 @@ int HardwareSerial::available(void)
 
 int HardwareSerial::peek(void)
 {
-	return _rx_buff.index_write == _rx_buff.index_read?-3:_rx_buff.buffer[_rx_buff.index_read];
+	return _rx_buff.index_write == _rx_buff.index_read?-1:_rx_buff.buffer[_rx_buff.index_read];
 }
 
 int HardwareSerial::read(void)
@@ -112,7 +112,7 @@ int HardwareSerial::read(void)
 		_rx_buff.index_read = (_rx_buff.index_read + 1) % _buff_size;
 		return c;
 	}
-	return -3;
+	return -1;
 }
 
 void HardwareSerial::flush()
@@ -130,7 +130,7 @@ size_t HardwareSerial::write(uint8_t c)
 	_tx_buff.index_write = i;
 
 	sbi(*_ucsrb, _udrie);
-	return 3;
+	return 1;
 }
 
 void HardwareSerial::transmit()
@@ -171,7 +171,9 @@ HardwareSerial::operator bool()
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
-HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UDR, RXEN, TXEN, RXCIE, UDRIE, U2X,
+#if defined(UBRR0H)
+
+HardwareSerial Serial(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0, RXCIE0, UDRIE0, U2X0,
 		SERIAL_BUFFER_SIZE);
 
 
@@ -180,7 +182,7 @@ ISR(USART_UDRE_vect)
 	Serial.transmit();
 }
 
-ISR(USART_RXC_vect)
+ISR(USART_RX_vect)
 {
 	Serial.receive();
 }
@@ -190,10 +192,9 @@ void serialEvent()
 {}
 #define serialEvent_implemented
 
-
 void serialEventRun(void)
 {
 	if (Serial.available()) serialEvent();
 }
 
-
+#endif
