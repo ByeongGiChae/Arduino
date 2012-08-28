@@ -171,38 +171,30 @@ HardwareSerial::operator bool()
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
+#if defined(UBRRH) || defined(UBRR0H)
+
 #if defined(UBRRH)
+	HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UDR, RXEN, TXEN, RXCIE, UDRIE, U2X, SERIAL_BUFFER_SIZE);
+#else
+	HardwareSerial Serial(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0, RXCIE0, UDRIE0, U2X0, SERIAL_BUFFER_SIZE);
+#endif
 
-HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UDR, RXEN, TXEN, RXCIE, UDRIE, U2X, SERIAL_BUFFER_SIZE);
-
+#if defined(USART_UDRE_vect)
 ISR(USART_UDRE_vect)
+#elif defined(USART0_UDRE_vect)
+ISR(USART0_UDRE_vect)
+#endif
 {
 	Serial.transmit();
 }
 
+#if defined(USART_RXC_vect)
 ISR(USART_RXC_vect)
-{
-	Serial.receive();
-}
-
-void serialEvent() __attribute__((weak));
-void serialEvent() {}
-#define serialEvent_implemented
-#endif
-
-
-#if defined(UBRR0H)
-
-HardwareSerial Serial(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0, RXCIE0, UDRIE0, U2X0,
-		SERIAL_BUFFER_SIZE);
-
-
-ISR(USART_UDRE_vect)
-{
-	Serial.transmit();
-}
-
+#elif defined(USART_RX_vect)
 ISR(USART_RX_vect)
+#elif defined(USART0_RX_vect)
+ISR(USART0_RX_vect)
+#endif
 {
 	Serial.receive();
 }
@@ -212,12 +204,70 @@ void serialEvent() {}
 #define serialEvent_implemented
 #endif
 
+#if defined(UBRR1H)
+	HardwareSerial Serial1(&UBRR1H, &UBRR1L, &UCSR1A, &UCSR1B, &UDR1, RXEN1, TXEN1, RXCIE1, UDRIE1, U2X1, SERIAL_BUFFER_SIZE);
 
+	ISR(USART1_UDRE_vect)
+	{
+		Serial1.transmit();
+	}
+
+	ISR(USART1_RX_vect)
+	{
+		Serial1.receive();
+	}
+	void serialEvent1() __attribute__((weak));
+	void serialEvent1() {}
+	#define serialEvent1_implemented
+#endif
+
+#if defined(UBRR2H)
+	HardwareSerial Serial2(&UBRR2H, &UBRR2L, &UCSR2A, &UCSR2B, &UDR2, RXEN2, TXEN2, RXCIE2, UDRIE2, U2X2, SERIAL_BUFFER_SIZE);
+
+	ISR(USART2_UDRE_vect)
+	{
+		Serial2.transmit();
+	}
+
+	ISR(USART2_RX_vect)
+	{
+		Serial2.receive();
+	}
+	void serialEvent2() __attribute__((weak));
+	void serialEvent2() {}
+	#define serialEvent2_implemented
+#endif
+
+#if defined(UBRR3H)
+	HardwareSerial Serial3(&UBRR3H, &UBRR3L, &UCSR3A, &UCSR3B, &UDR3, RXEN3, TXEN3, RXCIE3, UDRIE3, U2X3, SERIAL_BUFFER_SIZE);
+
+	ISR(USART3_UDRE_vect)
+	{
+		Serial3.transmit();
+	}
+
+	ISR(USART3_RX_vect)
+	{
+		Serial3.receive();
+	}
+	void serialEvent3() __attribute__((weak));
+	void serialEvent3() {}
+	#define serialEvent3_implemented
+#endif
 
 void serialEventRun(void)
 {
 #ifdef serialEvent_implemented
 	if (Serial.available()) serialEvent();
+#endif
+#ifdef serialEvent1_implemented
+	if (Serial1.available()) serialEvent1();
+#endif
+#ifdef serialEvent2_implemented
+	if (Serial2.available()) serialEvent2();
+#endif
+#ifdef serialEvent3_implemented
+	if (Serial3.available()) serialEvent3();
 #endif
 }
 
