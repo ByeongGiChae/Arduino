@@ -118,7 +118,7 @@ volatile unsigned long timer0_overflow_count = 0;
 	dbi(ADCSRA, ADPS0, bitRead(division, 0))
 
 // W.H. Guan: Do this long division just once. US means us unit, microsecond, 10 ^ (-6) second.
-SIGNAL(TIMER0_OVF_vect)
+ISR(TIMER0_OVF_vect)
 {
 	timer0_overflow_count++;
 }
