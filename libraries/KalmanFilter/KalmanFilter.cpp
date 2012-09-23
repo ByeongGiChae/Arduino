@@ -147,7 +147,7 @@ void KalmanFilter::kalman_update(const float ax_m, const float az_m)
 	 * to the gyro bias estimate.  We don't actually use this, so
 	 * we comment it out.
 	 */
-	const float C_0 = 1;
+	const float c0 = 1;
 	/* const float		C_1 = 0; */
 
 	/*
@@ -156,8 +156,8 @@ void KalmanFilter::kalman_update(const float ax_m, const float az_m)
 	 * Note that C[0,1] = C_1 is zero, so we do not compute that
 	 * term.
 	 */
-	const float PCt_0 = C_0 * _p[0][0]; /* + C_1 * P[0][1] = 0 */
-	const float PCt_1 = C_0 * _p[1][0]; /* + C_1 * P[1][1] = 0 */
+	const float pct0 = c0 * _p[0][0]; /* + C_1 * P[0][1] = 0 */
+	const float pct1 = c0 * _p[1][0]; /* + C_1 * P[1][1] = 0 */
 
 	/*
 	 * Compute the error estimate.  From the Kalman filter paper:
@@ -170,9 +170,7 @@ void KalmanFilter::kalman_update(const float ax_m, const float az_m)
 	 *
 	 * Again, note that C_1 is zero, so we do not compute the term.
 	 */
-	const float E = R_angle + C_0 * PCt_0
-	/*	+ C_1 * PCt_1 = 0 */
-	;
+	const float e = R_angle + c0 * pct0 /*	+ C_1 * PCt_1 = 0 */;
 
 	/*
 	 * Compute the Kalman filter gains.  From the Kalman paper:
@@ -185,8 +183,8 @@ void KalmanFilter::kalman_update(const float ax_m, const float az_m)
 	 *
 	 * Luckilly, E is <1,1>, so the inverse of E is just 1/E.
 	 */
-	const float K_0 = PCt_0 / E;
-	const float K_1 = PCt_1 / E;
+	const float k0 = pct0 / e;
+	const float k1 = pct1 / e;
 
 	/*
 	 * Update covariance matrix.  Again, from the Kalman filter paper:
@@ -207,13 +205,13 @@ void KalmanFilter::kalman_update(const float ax_m, const float az_m)
 	 *
 	 * This saves us a floating point multiply.
 	 */
-	const float t_0 = PCt_0; /* C_0 * P[0][0] + C_1 * P[1][0] */
-	const float t_1 = C_0 * _p[0][1]; /* + C_1 * P[1][1]  = 0 */
+	const float t0 = pct0; /* C_0 * P[0][0] + C_1 * P[1][0] */
+	const float t1 = c0 * _p[0][1]; /* + C_1 * P[1][1]  = 0 */
 
-	_p[0][0] -= K_0 * t_0;
-	_p[0][1] -= K_0 * t_1;
-	_p[1][0] -= K_1 * t_0;
-	_p[1][1] -= K_1 * t_1;
+	_p[0][0] -= k0 * t0;
+	_p[0][1] -= k0 * t1;
+	_p[1][0] -= k1 * t0;
+	_p[1][1] -= k1 * t1;
 
 	/*
 	 * Update our state estimate.  Again, from the Kalman paper:
@@ -229,8 +227,8 @@ void KalmanFilter::kalman_update(const float ax_m, const float az_m)
 	 * between the two accelerometer measured angle and our estimated
 	 * angle.
 	 */
-	_angle += K_0 * angle_err;
-	_q_bias += K_1 * angle_err;
+	_angle += k0 * angle_err;
+	_q_bias += k1 * angle_err;
 }
 
 float KalmanFilter::getAngle() const
