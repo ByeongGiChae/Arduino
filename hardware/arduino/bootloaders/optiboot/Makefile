@@ -52,7 +52,8 @@ ifeq ($(ENV), arduino)
 # of avr-tools are "right up there" in standard places.
 TOOLROOT = ../../../tools
 GCCROOT = $(TOOLROOT)/avr/bin/
-AVRDUDE_CONF = -C$(TOOLROOT)/avr/etc/avrdude.conf
+AVRDUDE_CONF = $(TOOLROOT)/avr/etc/avrdude.conf
+AVRDUDE = $(GCCROOT)avrdude
 
 ifeq ($(OS), windows)
 # On windows, SOME of the tool paths will need to have backslashes instead
@@ -63,25 +64,39 @@ fixpath = $(subst /,\,$1)
 SHELL = cmd.exe
 endif
 
+ifeq ($(OS), linux)
+TOOLROOT = 
+GCCROOT = 
+AVRDUDE_CONF = ../../../tools/avrdude.conf
+AVRDUDE = ../../../tools/avrdude
+endif
+
 else ifeq ($(ENV), arduinodev)
 # Arduino IDE source code environment.  Use the unpacked compilers created
 # by the build (you'll need to do "ant build" first.)
 ifeq ($(OS), macosx)
 TOOLROOT = ../../../../build/macosx/work/Arduino.app/Contents/Resources/Java/hardware/tools
+GCCROOT = $(TOOLROOT)/avr/bin/
+AVRDUDE_CONF = $(TOOLROOT)/avr/etc/avrdude.conf
+AVRDUDE = $(GCCROOT)avrdude
 endif
 ifeq ($(OS), windows)
 TOOLROOT = ../../../../build/windows/work/hardware/tools
+GCCROOT = $(TOOLROOT)/avr/bin/
+AVRDUDE_CONF = $(TOOLROOT)/avr/etc/avrdude.conf
+AVRDUDE = $(GCCROOT)avrdude
 endif
 ifeq ($(OS), linux)
 TOOLROOT = ../../../../build/linux/work/hardware/tools
-endif
-
 GCCROOT = $(TOOLROOT)/avr/bin/
-AVRDUDE_CONF = -C$(TOOLROOT)/avr/etc/avrdude.conf
+AVRDUDE_CONF = $(TOOLROOT)/avrdude.conf
+AVRDUDE = $(TOOLROOT)/avrdude
+endif
 
 else
 GCCROOT =
 AVRDUDE_CONF =
+AVRDUDE = avrdude
 endif
 #
 # End of build environment code.
@@ -97,13 +112,13 @@ endif
 # lock it), but since the high two bits of the lock byte are
 # unused, avrdude would get confused.
 
-ISPFUSES    = $(GCCROOT)avrdude $(AVRDUDE_CONF) -c $(ISPTOOL) \
+ISPFUSES    = $(AVRDUDE) -C $(AVRDUDE_CONF) -c $(ISPTOOL) \
               -p $(MCU_TARGET) -P $(ISPPORT) -b $(ISPSPEED) \
               -e -u -U lock:w:0x3f:m -U efuse:w:0x$(EFUSE):m \
               -U hfuse:w:0x$(HFUSE):m -U lfuse:w:0x$(LFUSE):m
-ISPFLASH    = $(GCCROOT)avrdude $(AVRDUDE_CONF) -c $(ISPTOOL) \
+ISPFLASH    = $(AVRDUDE) -C $(AVRDUDE_CONF) -c $(ISPTOOL) \
               -p $(MCU_TARGET) -P $(ISPPORT) -b $(ISPSPEED) \
-              -U flash:w:$(PROGRAM)_$(TARGET).hex -U lock:w:0x2f:m
+              -U flash:w:$(PROGRAM)_$(TARGET).hex -U lock:w:0x3f:m
 
 STK500 = "C:\Program Files\Atmel\AVR Tools\STK500\Stk500.exe"
 STK500-1 = $(STK500) -e -d$(MCU_TARGET) -pf -vf -if$(PROGRAM)_$(TARGET).hex \
