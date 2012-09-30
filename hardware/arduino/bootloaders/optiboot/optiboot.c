@@ -78,7 +78,6 @@
 /*                                                        */
 /**********************************************************/
 
-
 /**********************************************************/
 /*                                                        */
 /* Optional defines:                                      */
@@ -152,7 +151,7 @@
 asm("  .section .version\n"
     "optiboot_version:  .word " MAKEVER(OPTIBOOT_MAJVER, OPTIBOOT_MINVER) "\n"
     "  .section .text\n");
-
+
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
@@ -160,7 +159,6 @@ asm("  .section .version\n"
 // <avr/boot.h> uses sts instructions, but this version uses out instructions
 // This saves cycles and program memory.
 #include "boot.h"
-
 
 // We don't use <avr/wdt.h> as those routines have interrupt overhead we don't need.
 
@@ -179,9 +177,9 @@ asm("  .section .version\n"
 #ifndef BAUD_RATE
 #if F_CPU >= 8000000L
 #define BAUD_RATE   115200L // Highest rate Avrdude win32 will support
-#elsif F_CPU >= 1000000L
+#elif F_CPU >= 1000000L
 #define BAUD_RATE   9600L   // 19200 also supported, but with significant error
-#elsif F_CPU >= 128000L
+#elif F_CPU >= 128000L
 #define BAUD_RATE   4800L   // Good for 128kHz internal RC
 #else
 #define BAUD_RATE 1200L     // Good even at 32768Hz
@@ -205,10 +203,6 @@ asm("  .section .version\n"
 #define WATCHDOG_500MS  (_BV(WDP2) | _BV(WDP0) | _BV(WDE))
 #define WATCHDOG_1S     (_BV(WDP2) | _BV(WDP1) | _BV(WDE))
 #define WATCHDOG_2S     (_BV(WDP2) | _BV(WDP1) | _BV(WDP0) | _BV(WDE))
-#if (!defined(__AVR_ATmega8__) && !defined(__AVR_ATmega32__))
-#define WATCHDOG_4S     (_BV(WDP3) | _BV(WDE))
-#define WATCHDOG_8S     (_BV(WDP3) | _BV(WDP0) | _BV(WDE))
-#endif
 
 /* Function Prototypes */
 /* The main function is in init9, which removes the interrupt vector table */
@@ -219,8 +213,12 @@ void putch(char);
 uint8_t getch(void);
 static inline void getNch(uint8_t); /* "static inline" is a compiler hint to reduce code size */
 void verifySpace();
+
+#if LED_START_FLASHES > 0
 static inline void flash_led(uint8_t);
-uint8_t getLen();
+#endif
+
+/* uint8_t getLen();*/
 static inline void watchdogReset();
 void watchdogConfig(uint8_t x);
 #ifdef SOFT_UART
@@ -287,7 +285,7 @@ int main(void) {
   // If not, uncomment the following instructions:
   // cli();
   asm volatile ("clr __zero_reg__");
-#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega32__)
+#if defined(_MX_)
   SP=RAMEND;  // This is done by hardware reset
 #endif
 
@@ -301,17 +299,14 @@ int main(void) {
   TCCR1B = _BV(CS12) | _BV(CS10); // div 1024
 #endif
 #ifndef SOFT_UART
-#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega32__)
-  UCSRA = _BV(U2X); //Double speed mode USART
-  UCSRB = _BV(RXEN) | _BV(TXEN);  // enable Rx & Tx
-  UCSRC = _BV(URSEL) | _BV(UCSZ1) | _BV(UCSZ0);  // config USART; 8N1
-  UBRRL = (uint8_t)( (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 );
-#else
   UCSR0A = _BV(U2X0); //Double speed mode USART0
   UCSR0B = _BV(RXEN0) | _BV(TXEN0);
+#if defined(_MX_) 
+  UCSR0C = _BV(URSEL) | _BV(UCSZ01) | _BV(UCSZ00);  // config USART; 8N1
+#else
   UCSR0C = _BV(UCSZ00) | _BV(UCSZ01);
-  UBRR0L = (uint8_t)( (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 );
 #endif
+  UBRR0L = (uint8_t)( (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 );
 #endif
 
   // Set up watchdog to trigger after 500ms
@@ -469,7 +464,7 @@ int main(void) {
         putch(ch);
       } while (--length);
 #else
-#ifdef __AVR_ATmega1280__
+#if defined(_MX0_)
 //      do putch(pgm_read_byte_near(address++));
 //      while (--length);
       do {
@@ -632,11 +627,7 @@ void flash_led(uint8_t count) {
     TCNT1 = -(F_CPU/(1024*16));
     TIFR1 = _BV(TOV1);
     while(!(TIFR1 & _BV(TOV1)));
-#ifdef __AVR_ATmega8__
     LED_PORT ^= _BV(LED);
-#else
-    LED_PIN |= _BV(LED);
-#endif
     watchdogReset();
   } while (--count);
 }

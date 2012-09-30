@@ -317,10 +317,10 @@ atmega8: $(PROGRAM)_atmega8.lst
 atmega8_isp: atmega8
 atmega8_isp: TARGET = atmega8
 atmega8_isp: MCU_TARGET = atmega8
-# SPIEN, CKOPT, Bootsize=512B
+
 atmega8_isp: HFUSE = CC
-# 2.7V brownout, Low power xtal (16MHz) 16KCK/14CK+65ms
 atmega8_isp: LFUSE = BF
+
 atmega8_isp: isp_lh
 
 
