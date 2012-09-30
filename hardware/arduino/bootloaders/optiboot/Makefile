@@ -493,12 +493,12 @@ m168p: $(PROGRAM)_m168p.lst
 
 m168p_isp: m168p
 m168p_isp: TARGET = m168p
-# 2.7V brownout
-m168p_isp: HFUSE = D5
-# Low power xtal (16MHz) 16KCK/14CK+65ms
+m168p_isp: MCU_TARGET = atmega168p
+
 m168p_isp: LFUSE = FF
-# 512 byte boot
+m168p_isp: HFUSE = D5
 m168p_isp: EFUSE = 04
+
 m168p_isp: isp
 
 #

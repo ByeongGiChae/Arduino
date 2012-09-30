@@ -541,11 +541,7 @@ uint8_t getch(void) {
   uint8_t ch;
 
 #ifdef LED_DATA_FLASH
-#ifdef __AVR_ATmega8__
   LED_PORT ^= _BV(LED);
-#else
-  LED_PIN |= _BV(LED);
-#endif
 #endif
 
 #ifdef SOFT_UART
@@ -591,11 +587,7 @@ uint8_t getch(void) {
 #endif
 
 #ifdef LED_DATA_FLASH
-#ifdef __AVR_ATmega8__
   LED_PORT ^= _BV(LED);
-#else
-  LED_PIN |= _BV(LED);
-#endif
 #endif
 
   return ch;
