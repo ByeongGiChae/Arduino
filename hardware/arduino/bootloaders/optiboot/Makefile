@@ -72,6 +72,9 @@ endif
 ifeq ($(OS), windows)
 TOOLROOT = ../../../../build/windows/work/hardware/tools
 endif
+ifeq ($(OS), linux)
+TOOLROOT = ../../../../build/linux/work/hardware/tools
+endif
 
 GCCROOT = $(TOOLROOT)/avr/bin/
 AVRDUDE_CONF = -C$(TOOLROOT)/avr/etc/avrdude.conf
