@@ -112,10 +112,16 @@ endif
 # lock it), but since the high two bits of the lock byte are
 # unused, avrdude would get confused.
 
-ISPFUSES    = $(AVRDUDE) -C $(AVRDUDE_CONF) -c $(ISPTOOL) \
+ISPFUSES_LHE    = $(AVRDUDE) -C $(AVRDUDE_CONF) -c $(ISPTOOL) \
               -p $(MCU_TARGET) -P $(ISPPORT) -b $(ISPSPEED) \
               -e -u -U lock:w:0x3f:m -U efuse:w:0x$(EFUSE):m \
               -U hfuse:w:0x$(HFUSE):m -U lfuse:w:0x$(LFUSE):m
+
+ISPFUSES_LH    = $(AVRDUDE) -C $(AVRDUDE_CONF) -c $(ISPTOOL) \
+              -p $(MCU_TARGET) -P $(ISPPORT) -b $(ISPSPEED) \
+              -e -u -U lock:w:0x3f:m \
+              -U hfuse:w:0x$(HFUSE):m -U lfuse:w:0x$(LFUSE):m
+
 ISPFLASH    = $(AVRDUDE) -C $(AVRDUDE_CONF) -c $(ISPTOOL) \
               -p $(MCU_TARGET) -P $(ISPPORT) -b $(ISPSPEED) \
               -U flash:w:$(PROGRAM)_$(TARGET).hex -U lock:w:0x3f:m
@@ -315,7 +321,7 @@ atmega8_isp: MCU_TARGET = atmega8
 atmega8_isp: HFUSE = CC
 # 2.7V brownout, Low power xtal (16MHz) 16KCK/14CK+65ms
 atmega8_isp: LFUSE = BF
-atmega8_isp: isp
+atmega8_isp: isp_lh
 
 
 # ATmega88
@@ -457,7 +463,7 @@ m8L_isp: TARGET = m8L
 m8L_isp: MCU_TARGET = atmega8
 m8L_isp: LFUSE = A4
 m8L_isp: HFUSE = D4
-m8L_isp: isp
+m8L_isp: isp_lh
 
 #ATmega32
 #
@@ -474,7 +480,7 @@ m32_isp: TARGET = m32
 m32_isp: MCU_TARGET = atmega32
 m32_isp: LFUSE = BF
 m32_isp: HFUSE = D6
-m32_isp: isp
+m32_isp: isp_lh
 
 # m168p
 #
@@ -501,7 +507,11 @@ m168p_isp: isp
 #
 
 isp: $(TARGET)
-	$(ISPFUSES)
+	$(ISPFUSES_LHE)
+	$(ISPFLASH)
+
+isp_lh: $(TARGET)
+	$(ISPFUSES_LH)
 	$(ISPFLASH)
 
 isp-stk500: $(PROGRAM)_$(TARGET).hex
