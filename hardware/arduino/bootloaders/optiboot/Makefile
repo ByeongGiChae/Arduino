@@ -31,9 +31,9 @@ PROGRAM    = optiboot
 
 
 # enter the parameters for the avrdude isp tool
-ISPTOOL	   = stk500v2
-ISPPORT	   = usb
-ISPSPEED   = -b 115200
+ISPTOOL	   = stk500v1
+ISPPORT	   = /dev/ttyACM0
+ISPSPEED   = 115200
 
 MCU_TARGET = atmega168
 LDSECTIONS  = -Wl,--section-start=.text=0x3e00 -Wl,--section-start=.version=0x3ffe
@@ -98,11 +98,11 @@ endif
 # unused, avrdude would get confused.
 
 ISPFUSES    = $(GCCROOT)avrdude $(AVRDUDE_CONF) -c $(ISPTOOL) \
-              -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
+              -p $(MCU_TARGET) -P $(ISPPORT) -b $(ISPSPEED) \
               -e -u -U lock:w:0x3f:m -U efuse:w:0x$(EFUSE):m \
               -U hfuse:w:0x$(HFUSE):m -U lfuse:w:0x$(LFUSE):m
 ISPFLASH    = $(GCCROOT)avrdude $(AVRDUDE_CONF) -c $(ISPTOOL) \
-              -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
+              -p $(MCU_TARGET) -P $(ISPPORT) -b $(ISPSPEED) \
               -U flash:w:$(PROGRAM)_$(TARGET).hex -U lock:w:0x2f:m
 
 STK500 = "C:\Program Files\Atmel\AVR Tools\STK500\Stk500.exe"
