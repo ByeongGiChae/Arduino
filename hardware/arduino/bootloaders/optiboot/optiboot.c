@@ -226,33 +226,6 @@ void uartDelay() __attribute__ ((naked));
 #endif
 void appStart() __attribute__ ((naked));
 
-#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega32__)
-	#define RAMSTART (0x60)
-#elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__)
-	#define RAMSTART (0x100)
-#elif defined(__AVR_ATmega1280__)
-	#define RAMSTART (0x200)
-#endif	
-
-#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__) 
-	#define NRWWSTART (0xC00)
-#elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__)
-	#define NRWWSTART (0x1C00)
-#elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega32__)
-	#define NRWWSTART (0x3800)
-#elif defined(__AVR_ATmega1280__)
-	#define NRWWSTART (0xF000)
-#endif	
-	
-#if defined (__AVR_ATmega644P__)
-#define RAMSTART (0x100)
-#define NRWWSTART (0xE000)
-#elif defined(__AVR_ATtiny84__)
-#define RAMSTART (0x100)
-#define NRWWSTART (0x0000)
-#endif
-/* update NRWWSTART  and RAMSTART according to datasheet- weihong.guan */
-
 /* C zero initialises all global variables. However, that requires */
 /* These definitions are NOT zero initialised, but that doesn't matter */
 /* This allows us to drop the zero init code, saving us memory */
