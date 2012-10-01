@@ -1,8 +1,8 @@
-#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega16__) || defined(__AVR_ATmega32__) || defined(__AVR_ATmega64__)
+#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega16__) || defined(__AVR_ATmega32__)
 #define _MX_
 #endif
 
-#if defined(__AVR_ATmega48__) || defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__)
+#if defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__)
 #define _MX8_
 #endif
 
@@ -18,22 +18,26 @@
 #define _TINY_
 #endif
 
-#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega32__)
+#if defined(_MX_)
 	#define RAMSTART (0x60)
-#elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__)
+#elif defined(_MX8_) || defined(_MX4)
 	#define RAMSTART (0x100)
-#elif defined(__AVR_ATmega1280__)
+#elif defined(_MX0_)
 	#define RAMSTART (0x200)
 #endif	
 
 #if defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__) 
 	#define NRWWSTART (0xC00)
-#elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__)
+#elif defined(__AVR_ATmega16__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega164P__) 
 	#define NRWWSTART (0x1C00)
-#elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega32__)
+#elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega32__) || defined(__AVR_ATMega324P__)
 	#define NRWWSTART (0x3800)
-#elif defined(__AVR_ATmega1280__)
+#elif defined(__AVR_ATmega640__) || defined(__AVR_ATmega644P__)
+	#define NRWWSTART (0x7000)
+#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega1284P__)
 	#define NRWWSTART (0xF000)
+#elif defined(__AVR_ATmega2561__) || defined(__AVR_ATmega2561__)
+	#define NRWWSTART (0x1F00)
 #endif	
 	
 #if defined (__AVR_ATmega644P__)
