@@ -23,7 +23,7 @@
  * \file
  * Useful utility functions.
  */
-#include <Arduino.h>
+#include "Arduino.h"
 #include <avr/pgmspace.h>
 /** Store and print a string in flash memory.*/
 #define PgmPrint(x) SerialPrint_P(PSTR(x))
@@ -34,20 +34,24 @@
 #define UNUSEDOK __attribute__((unused))
 //------------------------------------------------------------------------------
 /** Return the number of bytes currently free in RAM. */
-static UNUSEDOK int FreeRam(void) {
-  extern int  __bss_end;
-  extern int* __brkval;
-  int free_memory;
-  if (reinterpret_cast<int>(__brkval) == 0) {
-    // if no heap use from end of bss section
-    free_memory = reinterpret_cast<int>(&free_memory)
-                  - reinterpret_cast<int>(&__bss_end);
-  } else {
-    // use from top of stack to heap
-    free_memory = reinterpret_cast<int>(&free_memory)
-                  - reinterpret_cast<int>(__brkval);
-  }
-  return free_memory;
+static UNUSEDOK int FreeRam(void)
+{
+	extern int __bss_end;
+	extern int* __brkval;
+	int free_memory;
+	if (reinterpret_cast<int>(__brkval) == 0)
+	{
+		// if no heap use from end of bss section
+		free_memory = reinterpret_cast<int>(&free_memory)
+				- reinterpret_cast<int>(&__bss_end);
+	}
+	else
+	{
+		// use from top of stack to heap
+		free_memory = reinterpret_cast<int>(&free_memory)
+				- reinterpret_cast<int>(__brkval);
+	}
+	return free_memory;
 }
 //------------------------------------------------------------------------------
 /**
@@ -55,8 +59,10 @@ static UNUSEDOK int FreeRam(void) {
  *
  * \param[in] str Pointer to string stored in flash memory.
  */
-static NOINLINE void SerialPrint_P(PGM_P str) {
-  for (uint8_t c; (c = pgm_read_byte(str)); str++) Serial.write(c);
+static NOINLINE void SerialPrint_P(PGM_P str)
+{
+	for (uint8_t c; (c = pgm_read_byte(str)); str++)
+		Serial.write(c);
 }
 //------------------------------------------------------------------------------
 /**
@@ -64,8 +70,9 @@ static NOINLINE void SerialPrint_P(PGM_P str) {
  *
  * \param[in] str Pointer to string stored in flash memory.
  */
-static NOINLINE void SerialPrintln_P(PGM_P str) {
-  SerialPrint_P(str);
-  Serial.println();
+static NOINLINE void SerialPrintln_P(PGM_P str)
+{
+	SerialPrint_P(str);
+	Serial.println();
 }
 #endif  // #define SdFatUtil_h
