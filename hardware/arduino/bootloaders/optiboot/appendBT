@@ -13,5 +13,5 @@ btln=$(cat $bt | wc -l)
 btln=$(($btln - 2))
 head -n $btln $bt | sed 's///g'
 
-echo ":00000001FF"
+tail -n 1 $bt | sed 's///g'
 
