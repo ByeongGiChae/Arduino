@@ -1,7 +1,0 @@
-#! /bin/sh
-
-set +x 
-
-number=$(cat optiboot_atmega8.hex | wc -l)
-number2=$(($number - 1))
-head -n $number2 optiboot_atmega8.hex
