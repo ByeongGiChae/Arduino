@@ -1,17 +1,41 @@
 #! /bin/sh
 
-set +x 
+set +x
 
-hex=$1
-hexln=$(cat $hex | wc -l)
-hexln=$(($hexln - 1))
+dlg=gdialog
 
-head -n $hexln $hex | sed 's///g'
+ls -1 *.hex > /tmp/bootloaders.$$
+i=1
 
-bt=${2:-"optiboot_atmega328.hex"}
-btln=$(cat $bt | wc -l)
-btln=$(($btln - 2))
-head -n $btln $bt | sed 's///g'
+while read line
+do
+	echo $i "$line" >> /tmp/options.$$
+	i=$((i + 1));
+done < /tmp/bootloaders.$$
+options=$(cat /tmp/options.$$)
 
-tail -n 1 $bt | sed 's///g'
+length=$(ls -l *.hex | wc -l)
 
+$dlg --stderr --backtitle "Append Bootloader to hex -- aGuegu.net" --title "Append Bootloader" --menu "Choose Bootloader:" 16 40 $length $options 2> /tmp/result.$$ 
+if [ $? = 0 ]; then
+	index=$(cat /tmp/result.$$)
+	bt=$(ls -1 *.hex | head -n $index | tail -n 1)
+
+	hex=$1
+	hexln=$(cat $hex | wc -l)
+	hexln=$((hexln -1))
+
+	head -n $hexln $hex | sed 's///g'
+
+	btln=$(cat $bt | wc -l)
+	btln=$(($btln - 2))
+	head -n $btln $bt | sed 's///g'
+
+	tail -n 1 $bt | sed 's///g'
+fi
+
+$dlg --clear
+
+rm -f /tmp/bootloaders.$$
+rm -f /tmp/options.$$
+rm -f /tmp/result.$$
