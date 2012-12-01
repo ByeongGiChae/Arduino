@@ -16,7 +16,7 @@ options=$(cat /tmp/options.$$)
 
 length=$(ls -l *.hex | wc -l)
 
-$dlg --stderr --backtitle "Append Bootloader to hex -- aGuegu.net" --title "Append Bootloader" --menu "Choose Bootloader:" 16 40 $length $options 2> /tmp/result.$$ 
+$dlg --stderr --title "Append Bootloader" --menu "Choose Bootloader:" 16 40 $length $options 2> /tmp/result.$$ 
 if [ $? = 0 ]; then
 	index=$(cat /tmp/result.$$)
 	bt=$(ls -1 *.hex | head -n $index | tail -n 1)
