@@ -1,3 +1,23 @@
+/*
+ * LiquidTemp.ino
+ *
+ * Arduino Library of Max6675 Cold-Junction-Compensated K-Thermocouple-
+ * to-Digital Converter (0°C to +1024°C)
+ *
+ * Max6675 official page: http://www.maximintegrated.com/datasheet/index.mvp/id/3149
+ *
+ * author: Weihong Guan (@aGuegu)
+ * host on: https://github.com/aguegu/Arduino/tree/master/libraries/Max6675
+ * e-mail: weihong.guan@gmail.com
+ * created on: 2012-8-6
+ * update on: 2011-12-03
+ *
+ * module designer: syyyd.com
+ *
+ * example for Max6675 with Liquid Crystal Display 1602 output 
+ */
+
+
 #include "Max6675.h"
 #include "LiquidCrystal.h"
 
