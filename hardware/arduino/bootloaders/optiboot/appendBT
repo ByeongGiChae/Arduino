@@ -1,7 +1,5 @@
 #! /bin/sh
 
-set +x
-
 dlg=gdialog
 
 ls -1 *.hex > /tmp/bootloaders.$$
