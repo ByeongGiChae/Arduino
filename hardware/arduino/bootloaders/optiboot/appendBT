@@ -2,7 +2,9 @@
 
 dlg=gdialog
 
-ls -1 *.hex > /tmp/bootloaders.$$
+bts=optiboot*.hex
+
+ls -1 $bts > /tmp/bootloaders.$$
 i=1
 
 while read line
@@ -12,22 +14,16 @@ do
 done < /tmp/bootloaders.$$
 options=$(cat /tmp/options.$$)
 
-length=$(ls -l *.hex | wc -l)
+length=$(ls -l $bts | wc -l)
 
 $dlg --stderr --title "Append Bootloader" --menu "Choose Bootloader:" 16 40 $length $options 2> /tmp/result.$$ 
 if [ $? = 0 ]; then
 	index=$(cat /tmp/result.$$)
-	bt=$(ls -1 *.hex | head -n $index | tail -n 1)
+	bt=$(ls -1 $bts | head -n $index | tail -n 1)
 
-	hex=$1
-	hexln=$(cat $hex | wc -l)
-	hexln=$((hexln -1))
+	head -n -1 $1 | sed 's///g'
 
-	head -n $hexln $hex | sed 's///g'
-
-	btln=$(cat $bt | wc -l)
-	btln=$(($btln - 2))
-	head -n $btln $bt | sed 's///g'
+	head -n -2 $bt | sed 's///g'
 
 	tail -n 1 $bt | sed 's///g'
 fi
