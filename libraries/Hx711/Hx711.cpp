@@ -45,12 +45,12 @@ long Hx711::getValue()
 	while (digitalRead(_pin_dout))
 		;
 
-	for (byte j = 0; j < 3; j++)
+	for (byte j = 3; j--;)
 	{
-		for (byte i = 0; i < 8; i++)
+		for (char i = 8; i--;)
 		{
 			digitalWrite(_pin_slk, HIGH);
-			bitWrite(data[2 - j], 7 - i, digitalRead(_pin_dout));
+			bitWrite(data[j], i, digitalRead(_pin_dout));
 			digitalWrite(_pin_slk, LOW);
 		}
 	}
@@ -58,7 +58,10 @@ long Hx711::getValue()
 	digitalWrite(_pin_slk, HIGH);
 	digitalWrite(_pin_slk, LOW);
 
-	return ((long) data[2] << 16) | ((long) data[1] << 8) | (long) data[0];
+	data[2] ^= 0x80;
+
+	return ((uint32_t) data[2] << 16) | ((uint32_t) data[1] << 8)
+			| (uint32_t) data[0];
 }
 
 void Hx711::setOffset(long offset)
