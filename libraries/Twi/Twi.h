@@ -41,7 +41,9 @@ public:
 	uint8_t readFrom(uint8_t address, uint8_t *data, uint8_t length,
 			uint8_t send_stop);
 	uint8_t writeTo(uint8_t address, uint8_t * data, uint8_t length,
-			uint8_t wait, uint8_t send_stop);
+			bool wait, bool send_stop);
+
+	uint8_t writeTo(uint8_t address, uint8_t data, bool wait, bool send_stop);
 
 	void sendStart(void);
 	void sendStop(void);
@@ -59,7 +61,7 @@ public:
 
 	void error(uint8_t);
 
-	void BuffClear(void);
+	void clearBuff(void);
 	void setState(uint8_t);
 
 	void (* _onRecive)(uint8_t *, uint8_t);
@@ -74,7 +76,7 @@ private:
 
 	volatile uint8_t _state;
 	volatile uint8_t _sla_rw;
-	volatile uint8_t _send_stop;
+	volatile bool _send_stop;
 	volatile uint8_t _in_repeated_start;
 	volatile uint8_t _error;
 	linear_buff _main_buff;

@@ -78,8 +78,8 @@ uint8_t Twi::readFrom(uint8_t address, uint8_t *data, uint8_t length,
 	return length;
 }
 
-uint8_t Twi::writeTo(uint8_t address, uint8_t * data, uint8_t length,
-		uint8_t wait, uint8_t send_stop)
+uint8_t Twi::writeTo(uint8_t address, uint8_t * data, uint8_t length, bool wait,
+		bool send_stop)
 {
 	if (length > _buff_length)
 		return 1;
@@ -105,6 +105,11 @@ uint8_t Twi::writeTo(uint8_t address, uint8_t * data, uint8_t length,
 		;
 
 	return _error;
+}
+
+uint8_t Twi::writeTo(uint8_t address, uint8_t data, bool wait, bool send_stop)
+{
+	return this->writeTo(address, &data, 1, wait, send_stop);
 }
 
 void Twi::reply(uint8_t ack)
@@ -185,7 +190,7 @@ void Twi::error(uint8_t error)
 	_error = error;
 }
 
-void Twi::BuffClear(void)
+void Twi::clearBuff(void)
 {
 	_main_buff.index = 0;
 	_main_buff.length = _buff_length;
@@ -268,7 +273,7 @@ ISR(TWI_vect)
 	case TW_SR_ARB_LOST_SLA_ACK:
 	case TW_SR_ARB_LOST_GCALL_ACK:
 		twi.setState(TWI_S_RX);
-		twi.BuffClear();
+		twi.clearBuff();
 		twi.reply(true);
 		break;
 	case TW_SR_DATA_ACK:
@@ -279,7 +284,7 @@ ISR(TWI_vect)
 	case TW_SR_STOP:
 		twi.stop();
 		twi.onReceiveEvent();
-		twi.BuffClear();
+		twi.clearBuff();
 		twi.releaseBus();
 		break;
 	case TW_SR_DATA_NACK:
@@ -291,7 +296,7 @@ ISR(TWI_vect)
 	case TW_ST_SLA_ACK:
 	case TW_ST_ARB_LOST_SLA_ACK:
 		twi.setState(TWI_S_TX);
-		twi.BuffClear();
+		twi.clearBuff();
 		twi.onTransmitEvent();
 		break;
 	case TW_ST_DATA_ACK:
@@ -302,7 +307,6 @@ ISR(TWI_vect)
 		twi.reply(true);
 		twi.setState(TWI_READY);
 		break;
-
 	case TW_NO_INFO:
 		break;
 	case TW_BUS_ERROR:
