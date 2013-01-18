@@ -43,7 +43,7 @@ public:
 	uint8_t writeTo(uint8_t address, uint8_t * data, uint8_t length,
 			bool wait, bool send_stop);
 
-	uint8_t writeTo(uint8_t address, uint8_t data, bool wait, bool send_stop);
+	uint8_t writeTo(uint8_t address, uint8_t data, bool wait = true, bool send_stop = true);
 
 	void sendStart(void);
 	void sendStop(void);
