@@ -24,11 +24,10 @@
 #include "HardwareSerial.h"
 
 #if (RAMEND < 1000)
-  #define SERIAL_BUFFER_SIZE 16
+#define SERIAL_BUFFER_SIZE 16
 #else
-  #define SERIAL_BUFFER_SIZE 64
+#define SERIAL_BUFFER_SIZE 64
 #endif
-
 
 // Constructors ////////////////////////////////////////////////////////////////
 
@@ -36,9 +35,9 @@ HardwareSerial::HardwareSerial(volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
 		volatile uint8_t *ucsra, volatile uint8_t *ucsrb, volatile uint8_t *udr,
 		uint8_t rxen, uint8_t txen, uint8_t rxcie, uint8_t udrie, uint8_t u2x,
 		uint8_t buff_size) :
-_ubrrh(ubrrh), _ubrrl(ubrrl), _ucsra(ucsra), _ucsrb(ucsrb), _udr(udr), _rxen(
-		rxen), _txen(txen), _rxcie(rxcie), _udrie(udrie), _u2x(u2x), _buff_size(
-		buff_size)
+		_ubrrh(ubrrh), _ubrrl(ubrrl), _ucsra(ucsra), _ucsrb(ucsrb), _udr(udr), _rxen(
+				rxen), _txen(txen), _rxcie(rxcie), _udrie(udrie), _u2x(u2x), _buff_size(
+				buff_size)
 {
 	_tx_buff.index_write = 0;
 	_tx_buff.index_read = 0;
@@ -54,7 +53,6 @@ HardwareSerial::~HardwareSerial()
 	free(_tx_buff.buffer);
 	free(_rx_buff.buffer);
 }
-
 
 // Public Methods //////////////////////////////////////////////////////////////
 
@@ -85,7 +83,7 @@ void HardwareSerial::end()
 {
 	// wait for transmission of outgoing data
 	while (_tx_buff.index_write != _tx_buff.index_read)
-	;
+		;
 
 	cbi(*_ucsrb, _rxen);
 	cbi(*_ucsrb, _txen);
@@ -96,12 +94,13 @@ void HardwareSerial::end()
 int HardwareSerial::available(void)
 {
 	return (_buff_size + _rx_buff.index_write - _rx_buff.index_read)
-	% _buff_size;
+			% _buff_size;
 }
 
 int HardwareSerial::peek(void)
 {
-	return _rx_buff.index_write == _rx_buff.index_read?-1:_rx_buff.buffer[_rx_buff.index_read];
+	return _rx_buff.index_write == _rx_buff.index_read ?
+			-1 : _rx_buff.buffer[_rx_buff.index_read];
 }
 
 int HardwareSerial::read(void)
@@ -117,14 +116,16 @@ int HardwareSerial::read(void)
 
 void HardwareSerial::flush()
 {
-	while (_tx_buff.index_write != _tx_buff.index_read);
+	while (_tx_buff.index_write != _tx_buff.index_read)
+		;
 }
 
 size_t HardwareSerial::write(uint8_t c)
 {
 	uint8_t i = (_tx_buff.index_write + 1) % _buff_size;
 
-	while (i == _tx_buff.index_read);
+	while (i == _tx_buff.index_read)
+		;
 
 	_tx_buff.buffer[_tx_buff.index_write] = c;
 	_tx_buff.index_write = i;
@@ -174,9 +175,10 @@ HardwareSerial::operator bool()
 #if defined(UBRRH) || defined(UBRR0H)
 
 #if defined(UBRRH)
-	HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UDR, RXEN, TXEN, RXCIE, UDRIE, U2X, SERIAL_BUFFER_SIZE);
+HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UDR, RXEN, TXEN, RXCIE, UDRIE, U2X, SERIAL_BUFFER_SIZE);
 #else
-	HardwareSerial Serial(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0, RXCIE0, UDRIE0, U2X0, SERIAL_BUFFER_SIZE);
+HardwareSerial Serial(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0,
+		RXCIE0, UDRIE0, U2X0, SERIAL_BUFFER_SIZE);
 #endif
 
 #if defined(USART_UDRE_vect)
@@ -200,65 +202,71 @@ ISR(USART0_RX_vect)
 }
 
 void serialEvent() __attribute__((weak));
-void serialEvent() {}
+void serialEvent()
+{
+}
 #define serialEvent_implemented
 #endif
 
 #if defined(UBRR1H)
-	HardwareSerial Serial1(&UBRR1H, &UBRR1L, &UCSR1A, &UCSR1B, &UDR1, RXEN1, TXEN1, RXCIE1, UDRIE1, U2X1, SERIAL_BUFFER_SIZE);
+HardwareSerial Serial1(&UBRR1H, &UBRR1L, &UCSR1A, &UCSR1B, &UDR1, RXEN1, TXEN1, RXCIE1, UDRIE1, U2X1, SERIAL_BUFFER_SIZE);
 
-	ISR(USART1_UDRE_vect)
-	{
-		Serial1.transmit();
-	}
+ISR(USART1_UDRE_vect)
+{
+	Serial1.transmit();
+}
 
-	ISR(USART1_RX_vect)
-	{
-		Serial1.receive();
-	}
-	void serialEvent1() __attribute__((weak));
-	void serialEvent1() {}
-	#define serialEvent1_implemented
+ISR(USART1_RX_vect)
+{
+	Serial1.receive();
+}
+void serialEvent1() __attribute__((weak));
+void serialEvent1()
+{}
+#define serialEvent1_implemented
 #endif
 
 #if defined(UBRR2H)
-	HardwareSerial Serial2(&UBRR2H, &UBRR2L, &UCSR2A, &UCSR2B, &UDR2, RXEN2, TXEN2, RXCIE2, UDRIE2, U2X2, SERIAL_BUFFER_SIZE);
+HardwareSerial Serial2(&UBRR2H, &UBRR2L, &UCSR2A, &UCSR2B, &UDR2, RXEN2, TXEN2, RXCIE2, UDRIE2, U2X2, SERIAL_BUFFER_SIZE);
 
-	ISR(USART2_UDRE_vect)
-	{
-		Serial2.transmit();
-	}
+ISR(USART2_UDRE_vect)
+{
+	Serial2.transmit();
+}
 
-	ISR(USART2_RX_vect)
-	{
-		Serial2.receive();
-	}
-	void serialEvent2() __attribute__((weak));
-	void serialEvent2() {}
-	#define serialEvent2_implemented
+ISR(USART2_RX_vect)
+{
+	Serial2.receive();
+}
+void serialEvent2() __attribute__((weak));
+void serialEvent2()
+{}
+#define serialEvent2_implemented
 #endif
 
 #if defined(UBRR3H)
-	HardwareSerial Serial3(&UBRR3H, &UBRR3L, &UCSR3A, &UCSR3B, &UDR3, RXEN3, TXEN3, RXCIE3, UDRIE3, U2X3, SERIAL_BUFFER_SIZE);
+HardwareSerial Serial3(&UBRR3H, &UBRR3L, &UCSR3A, &UCSR3B, &UDR3, RXEN3, TXEN3, RXCIE3, UDRIE3, U2X3, SERIAL_BUFFER_SIZE);
 
-	ISR(USART3_UDRE_vect)
-	{
-		Serial3.transmit();
-	}
+ISR(USART3_UDRE_vect)
+{
+	Serial3.transmit();
+}
 
-	ISR(USART3_RX_vect)
-	{
-		Serial3.receive();
-	}
-	void serialEvent3() __attribute__((weak));
-	void serialEvent3() {}
-	#define serialEvent3_implemented
+ISR(USART3_RX_vect)
+{
+	Serial3.receive();
+}
+void serialEvent3() __attribute__((weak));
+void serialEvent3()
+{}
+#define serialEvent3_implemented
 #endif
 
 void serialEventRun(void)
 {
 #ifdef serialEvent_implemented
-	if (Serial.available()) serialEvent();
+	if (Serial.available())
+		serialEvent();
 #endif
 #ifdef serialEvent1_implemented
 	if (Serial1.available()) serialEvent1();
@@ -270,5 +278,4 @@ void serialEventRun(void)
 	if (Serial3.available()) serialEvent3();
 #endif
 }
-
 
