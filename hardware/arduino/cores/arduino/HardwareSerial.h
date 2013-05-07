@@ -28,15 +28,13 @@
 #include "wiring_private.h"
 #include "Arduino.h"
 
-struct ring_buff
-{
+struct ring_buff {
 	uint8_t *buffer;
 	volatile uint8_t index_write;	// to receive the incoming byte
 	volatile uint8_t index_read;	// to send byte
 };
 
-class HardwareSerial: public Stream
-{
+class HardwareSerial: public Stream {
 public:
 	HardwareSerial(volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
 			volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
@@ -53,8 +51,6 @@ public:
 	//using Print::write; // pull in write(str) and write(buf, size) from Print
 	void transmit();
 	void receive();
-
-	operator bool();
 
 private:
 	volatile uint8_t * const _ubrrh;

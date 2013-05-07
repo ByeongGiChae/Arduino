@@ -37,8 +37,7 @@ HardwareSerial::HardwareSerial(volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
 		uint8_t buff_size) :
 		_ubrrh(ubrrh), _ubrrl(ubrrl), _ucsra(ucsra), _ucsrb(ucsrb), _udr(udr), _rxen(
 				rxen), _txen(txen), _rxcie(rxcie), _udrie(udrie), _u2x(u2x), _buff_size(
-				buff_size)
-{
+				buff_size) {
 	_tx_buff.index_write = 0;
 	_tx_buff.index_read = 0;
 	_tx_buff.buffer = (uint8_t *) malloc(sizeof(uint8_t) * _buff_size);
@@ -48,23 +47,20 @@ HardwareSerial::HardwareSerial(volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
 	_rx_buff.buffer = (uint8_t *) malloc(sizeof(uint8_t) * _buff_size);
 }
 
-HardwareSerial::~HardwareSerial()
-{
+HardwareSerial::~HardwareSerial() {
 	free(_tx_buff.buffer);
 	free(_rx_buff.buffer);
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
 
-void HardwareSerial::begin(unsigned long baudrate)
-{
+void HardwareSerial::begin(unsigned long baudrate) {
 	uint16_t baud_setting;
 	sbi(*_ucsra, _u2x);
 
 	baud_setting = (F_CPU / 4 / baudrate - 1) / 2;
 
-	if (baud_setting > 4095)
-	{
+	if (baud_setting > 4095) {
 		cbi(*_ucsra, _u2x);
 		baud_setting = (F_CPU / 8 / baudrate - 1) / 2;
 	}
@@ -79,8 +75,7 @@ void HardwareSerial::begin(unsigned long baudrate)
 	cbi(*_ucsrb, _udrie);
 }
 
-void HardwareSerial::end()
-{
+void HardwareSerial::end() {
 	// wait for transmission of outgoing data
 	while (_tx_buff.index_write != _tx_buff.index_read)
 		;
@@ -91,22 +86,18 @@ void HardwareSerial::end()
 	cbi(*_ucsrb, _udrie);
 }
 
-int HardwareSerial::available(void)
-{
+int HardwareSerial::available(void) {
 	return (_buff_size + _rx_buff.index_write - _rx_buff.index_read)
 			% _buff_size;
 }
 
-int HardwareSerial::peek(void)
-{
+int HardwareSerial::peek(void) {
 	return _rx_buff.index_write == _rx_buff.index_read ?
 			-1 : _rx_buff.buffer[_rx_buff.index_read];
 }
 
-int HardwareSerial::read(void)
-{
-	if (_rx_buff.index_write != _rx_buff.index_read)
-	{
+int HardwareSerial::read(void) {
+	if (_rx_buff.index_write != _rx_buff.index_read) {
 		uint8_t c = _rx_buff.buffer[_rx_buff.index_read];
 		_rx_buff.index_read = (_rx_buff.index_read + 1) % _buff_size;
 		return c;
@@ -114,14 +105,12 @@ int HardwareSerial::read(void)
 	return -1;
 }
 
-void HardwareSerial::flush()
-{
+void HardwareSerial::flush() {
 	while (_tx_buff.index_write != _tx_buff.index_read)
 		;
 }
 
-size_t HardwareSerial::write(uint8_t c)
-{
+size_t HardwareSerial::write(uint8_t c) {
 	uint8_t i = (_tx_buff.index_write + 1) % _buff_size;
 
 	while (i == _tx_buff.index_read)
@@ -134,15 +123,11 @@ size_t HardwareSerial::write(uint8_t c)
 	return 1;
 }
 
-void HardwareSerial::transmit()
-{
-	if (_tx_buff.index_write == _tx_buff.index_read)
-	{
+void HardwareSerial::transmit() {
+	if (_tx_buff.index_write == _tx_buff.index_read) {
 		cbi(*_ucsrb, _udrie);
 		// Buffer empty, so disable interrupts
-	}
-	else
-	{
+	} else {
 		// There is more data in the output buffer. Send the next byte
 		uint8_t c = _tx_buff.buffer[_tx_buff.index_read];
 		_tx_buff.index_read = (_tx_buff.index_read + 1) % _buff_size;
@@ -151,24 +136,17 @@ void HardwareSerial::transmit()
 	}
 }
 
-void HardwareSerial::receive()
-{
+void HardwareSerial::receive() {
 	uint8_t i = (_rx_buff.index_write + 1) % _buff_size;
 
 	// if we should be storing the received character into the location
 	// just before the tail (meaning that the head would advance to the
 	// current location of the tail), we're about to overflow the buffer
 	// and so we don't write the character or advance the head.
-	if (i != _rx_buff.index_read)
-	{
+	if (i != _rx_buff.index_read) {
 		_rx_buff.buffer[_rx_buff.index_write] = *_udr;
 		_rx_buff.index_write = i;
 	}
-}
-
-HardwareSerial::operator bool()
-{
-	return true;
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
@@ -262,11 +240,10 @@ void serialEvent3()
 #define serialEvent3_implemented
 #endif
 
-void serialEventRun(void)
-{
+void serialEventRun(void) {
 #ifdef serialEvent_implemented
 	if (Serial.available())
-		serialEvent();
+	serialEvent();
 #endif
 #ifdef serialEvent1_implemented
 	if (Serial1.available()) serialEvent1();
