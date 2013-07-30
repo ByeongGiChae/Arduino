@@ -12,7 +12,7 @@
 #include "binary.h"
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #define HIGH 0x1
@@ -83,7 +83,14 @@ extern "C"{
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define bitSet(value, bit) ((value) |= (1UL << (bit)))
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
-#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
+#define bitWrite(value, bit, condition) ((condition) ? bitSet(value, bit) : bitClear(value, bit))
+#define bitToggle(value, bit) ((value) ^= (1UL << (bit)))
+
+#define bitReadMask(value, mask) ((value) & (mask))
+#define bitSetMask(value, mask) ((value) |= (mask))
+#define bitClearMask(value, mask) ((value) &= ~(mask))
+#define bitWriteMask(value, mask, condition) ((condition)? bitSetMask(value, mask) : bitClearMask(value, mask))
+#define bitToggleMask(value, mask) ((value) ^= (mask))
 
 typedef unsigned int word;
 
@@ -196,7 +203,8 @@ uint16_t makeWord(byte h, byte l);
 
 #define word(...) makeWord(__VA_ARGS__)
 
-unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
+unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout =
+		1000000L);
 
 void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
 void noTone(uint8_t _pin);
