@@ -154,12 +154,11 @@ void HardwareSerial::receive() {
 	// current location of the tail), we're about to overflow the buffer
 	// and so we don't write the character or advance the head.
 	if (i != _rx_buff.index_read) {
-
-		if (bit_is_set(*_ucsra, UPE0)) {
+		if (*_ucsra & 0x1c) {
+			i = *_udr;
+		} else {
 			_rx_buff.buffer[_rx_buff.index_write] = *_udr;
 			_rx_buff.index_write = i;
-		} else {
-			i = *_udr;
 		}
 	}
 }

@@ -62,9 +62,10 @@ struct ring_buff {
 class HardwareSerial: public Stream {
 public:
 	HardwareSerial(volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
-			volatile uint8_t *ucsra, volatile uint8_t *ucsrb, volatile uint8_t *ucsrc,
-			volatile uint8_t *udr, uint8_t rxen, uint8_t txen, uint8_t rxcie,
-			uint8_t udrie, uint8_t u2x, uint8_t buff_size);
+			volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
+			volatile uint8_t *ucsrc, volatile uint8_t *udr, uint8_t rxen,
+			uint8_t txen, uint8_t rxcie, uint8_t udrie, uint8_t u2x,
+			uint8_t buff_size);
 	virtual ~HardwareSerial();
 	void begin(unsigned long baudrate);
 	void begin(unsigned long baudrate, uint8_t config);
@@ -85,6 +86,7 @@ private:
 	volatile uint8_t * const _ucsrb;
 	volatile uint8_t * const _ucsrc;
 	volatile uint8_t * const _udr;
+
 	const uint8_t _rxen;
 	const uint8_t _txen;
 	const uint8_t _rxcie;
