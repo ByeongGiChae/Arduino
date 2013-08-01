@@ -32,12 +32,13 @@
 // Constructors ////////////////////////////////////////////////////////////////
 
 HardwareSerial::HardwareSerial(volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
-		volatile uint8_t *ucsra, volatile uint8_t *ucsrb, volatile uint8_t *udr,
-		uint8_t rxen, uint8_t txen, uint8_t rxcie, uint8_t udrie, uint8_t u2x,
+		volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
+		volatile uint8_t *ucsrc, volatile uint8_t *udr, uint8_t rxen,
+		uint8_t txen, uint8_t rxcie, uint8_t udrie, uint8_t u2x,
 		uint8_t buff_size) :
-		_ubrrh(ubrrh), _ubrrl(ubrrl), _ucsra(ucsra), _ucsrb(ucsrb), _udr(udr), _rxen(
-				rxen), _txen(txen), _rxcie(rxcie), _udrie(udrie), _u2x(u2x), _buff_size(
-				buff_size) {
+		_ubrrh(ubrrh), _ubrrl(ubrrl), _ucsra(ucsra), _ucsrb(ucsrb), _ucsrc(
+				ucsrc), _udr(udr), _rxen(rxen), _txen(txen), _rxcie(rxcie), _udrie(
+				udrie), _u2x(u2x), _buff_size(buff_size) {
 	_tx_buff.index_write = 0;
 	_tx_buff.index_read = 0;
 	_tx_buff.buffer = (uint8_t *) malloc(sizeof(uint8_t) * _buff_size);
@@ -73,6 +74,15 @@ void HardwareSerial::begin(unsigned long baudrate) {
 	sbi(*_ucsrb, _txen);
 	sbi(*_ucsrb, _rxcie);
 	cbi(*_ucsrb, _udrie);
+}
+
+void HardwareSerial::begin(unsigned long baudrate, uint8_t config) {
+#if defined(__AVR_ATmega8__)
+	config |= 0x80; // select UCSRC register (shared with UBRRH)
+#endif
+	*_ucsrc = config;
+
+	this->begin(baudrate);
 }
 
 void HardwareSerial::end() {
@@ -144,19 +154,23 @@ void HardwareSerial::receive() {
 	// current location of the tail), we're about to overflow the buffer
 	// and so we don't write the character or advance the head.
 	if (i != _rx_buff.index_read) {
-		_rx_buff.buffer[_rx_buff.index_write] = *_udr;
-		_rx_buff.index_write = i;
+
+		if (bit_is_set(*_ucsra, UPE0)) {
+			_rx_buff.buffer[_rx_buff.index_write] = *_udr;
+			_rx_buff.index_write = i;
+		} else {
+			i = *_udr;
+		}
 	}
 }
-
 // Preinstantiate Objects //////////////////////////////////////////////////////
 #if defined(UBRRH) || defined(UBRR0H)
 
 #if defined(UBRRH)
-HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UDR, RXEN, TXEN, RXCIE, UDRIE, U2X, SERIAL_BUFFER_SIZE);
+HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UCSRC, &UDR, RXEN, TXEN, RXCIE, UDRIE, U2X, SERIAL_BUFFER_SIZE);
 #else
-HardwareSerial Serial(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0,
-		RXCIE0, UDRIE0, U2X0, SERIAL_BUFFER_SIZE);
+HardwareSerial Serial(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UCSR0C, &UDR0, RXEN0,
+		TXEN0, RXCIE0, UDRIE0, U2X0, SERIAL_BUFFER_SIZE);
 #endif
 
 #if defined(USART_UDRE_vect)
@@ -180,14 +194,13 @@ ISR(USART0_RX_vect)
 }
 
 void serialEvent() __attribute__((weak));
-void serialEvent()
-{
+void serialEvent() {
 }
 #define serialEvent_implemented
 #endif
 
 #if defined(UBRR1H)
-HardwareSerial Serial1(&UBRR1H, &UBRR1L, &UCSR1A, &UCSR1B, &UDR1, RXEN1, TXEN1, RXCIE1, UDRIE1, U2X1, SERIAL_BUFFER_SIZE);
+HardwareSerial Serial1(&UBRR1H, &UBRR1L, &UCSR1A, &UCSR1B, &UCSR1C, &UDR1, RXEN1, TXEN1, RXCIE1, UDRIE1, U2X1, SERIAL_BUFFER_SIZE);
 
 ISR(USART1_UDRE_vect)
 {
@@ -205,7 +218,7 @@ void serialEvent1()
 #endif
 
 #if defined(UBRR2H)
-HardwareSerial Serial2(&UBRR2H, &UBRR2L, &UCSR2A, &UCSR2B, &UDR2, RXEN2, TXEN2, RXCIE2, UDRIE2, U2X2, SERIAL_BUFFER_SIZE);
+HardwareSerial Serial2(&UBRR2H, &UBRR2L, &UCSR2A, &UCSR2B, &UCSR2C, &UDR2, RXEN2, TXEN2, RXCIE2, UDRIE2, U2X2, SERIAL_BUFFER_SIZE);
 
 ISR(USART2_UDRE_vect)
 {
@@ -223,7 +236,7 @@ void serialEvent2()
 #endif
 
 #if defined(UBRR3H)
-HardwareSerial Serial3(&UBRR3H, &UBRR3L, &UCSR3A, &UCSR3B, &UDR3, RXEN3, TXEN3, RXCIE3, UDRIE3, U2X3, SERIAL_BUFFER_SIZE);
+HardwareSerial Serial3(&UBRR3H, &UBRR3L, &UCSR3A, &UCSR3B, &UCSR3C, &UDR3, RXEN3, TXEN3, RXCIE3, UDRIE3, U2X3, SERIAL_BUFFER_SIZE);
 
 ISR(USART3_UDRE_vect)
 {
@@ -243,7 +256,7 @@ void serialEvent3()
 void serialEventRun(void) {
 #ifdef serialEvent_implemented
 	if (Serial.available())
-	serialEvent();
+		serialEvent();
 #endif
 #ifdef serialEvent1_implemented
 	if (Serial1.available()) serialEvent1();

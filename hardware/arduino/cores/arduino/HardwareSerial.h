@@ -28,6 +28,31 @@
 #include "wiring_private.h"
 #include "Arduino.h"
 
+#define SERIAL_5N1 0x00
+#define SERIAL_6N1 0x02
+#define SERIAL_7N1 0x04
+#define SERIAL_8N1 0x06
+#define SERIAL_5N2 0x08
+#define SERIAL_6N2 0x0A
+#define SERIAL_7N2 0x0C
+#define SERIAL_8N2 0x0E
+#define SERIAL_5E1 0x20
+#define SERIAL_6E1 0x22
+#define SERIAL_7E1 0x24
+#define SERIAL_8E1 0x26
+#define SERIAL_5E2 0x28
+#define SERIAL_6E2 0x2A
+#define SERIAL_7E2 0x2C
+#define SERIAL_8E2 0x2E
+#define SERIAL_5O1 0x30
+#define SERIAL_6O1 0x32
+#define SERIAL_7O1 0x34
+#define SERIAL_8O1 0x36
+#define SERIAL_5O2 0x38
+#define SERIAL_6O2 0x3A
+#define SERIAL_7O2 0x3C
+#define SERIAL_8O2 0x3E
+
 struct ring_buff {
 	uint8_t *buffer;
 	volatile uint8_t index_write;	// to receive the incoming byte
@@ -37,11 +62,12 @@ struct ring_buff {
 class HardwareSerial: public Stream {
 public:
 	HardwareSerial(volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
-			volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
+			volatile uint8_t *ucsra, volatile uint8_t *ucsrb, volatile uint8_t *ucsrc,
 			volatile uint8_t *udr, uint8_t rxen, uint8_t txen, uint8_t rxcie,
 			uint8_t udrie, uint8_t u2x, uint8_t buff_size);
 	virtual ~HardwareSerial();
 	void begin(unsigned long baudrate);
+	void begin(unsigned long baudrate, uint8_t config);
 	void end();
 	virtual int available(void);
 	virtual int peek(void);
@@ -57,6 +83,7 @@ private:
 	volatile uint8_t * const _ubrrl;
 	volatile uint8_t * const _ucsra;
 	volatile uint8_t * const _ucsrb;
+	volatile uint8_t * const _ucsrc;
 	volatile uint8_t * const _udr;
 	const uint8_t _rxen;
 	const uint8_t _txen;
@@ -67,7 +94,6 @@ private:
 
 	ring_buff _tx_buff;
 	ring_buff _rx_buff;
-
 };
 
 extern HardwareSerial Serial;
