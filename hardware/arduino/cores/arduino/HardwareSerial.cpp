@@ -118,6 +118,8 @@ int HardwareSerial::read(void) {
 void HardwareSerial::flush() {
 	while (_tx_buff.index_write != _tx_buff.index_read)
 		;
+
+	loop_until_bit_is_set(*_ucsra, 6);
 }
 
 size_t HardwareSerial::write(uint8_t c) {
@@ -134,16 +136,12 @@ size_t HardwareSerial::write(uint8_t c) {
 }
 
 void HardwareSerial::transmit() {
-	if (_tx_buff.index_write == _tx_buff.index_read) {
-		cbi(*_ucsrb, _udrie);
-		// Buffer empty, so disable interrupts
-	} else {
-		// There is more data in the output buffer. Send the next byte
-		uint8_t c = _tx_buff.buffer[_tx_buff.index_read];
-		_tx_buff.index_read = (_tx_buff.index_read + 1) % _buff_size;
+	sbi(*_ucsra, 6);	// write 1 to clear TXC
+	*_udr = _tx_buff.buffer[_tx_buff.index_read];
+	_tx_buff.index_read = (_tx_buff.index_read + 1) % _buff_size;
 
-		*_udr = c;
-	}
+	if (_tx_buff.index_write == _tx_buff.index_read)
+		cbi(*_ucsrb, _udrie);
 }
 
 void HardwareSerial::receive() {
@@ -169,7 +167,7 @@ void HardwareSerial::receive() {
 HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UCSRC, &UDR, RXEN, TXEN, RXCIE, UDRIE, U2X, SERIAL_BUFFER_SIZE);
 #else
 HardwareSerial Serial(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UCSR0C, &UDR0, RXEN0,
-		TXEN0, RXCIE0, UDRIE0, U2X0, SERIAL_BUFFER_SIZE);
+TXEN0, RXCIE0, UDRIE0, U2X0, SERIAL_BUFFER_SIZE);
 #endif
 
 #if defined(USART_UDRE_vect)
