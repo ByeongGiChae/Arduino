@@ -524,7 +524,7 @@ ISR(TIMER1_COMPA_vect)
 }
 #endif
 
-
+ISR(TIMER2_COMPA_vect) __attribute__ ((weak));
 ISR(TIMER2_COMPA_vect)
 {
 
