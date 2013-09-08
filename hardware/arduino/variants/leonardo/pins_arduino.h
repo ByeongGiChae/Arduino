@@ -57,7 +57,7 @@ static const uint8_t A9 = 27;	// D9
 static const uint8_t A10 = 28;	// D10
 static const uint8_t A11 = 29;	// D12
 
-#define digitalPinToPCICR(p)    ((((p) >= 8 && (p) <= 11) || ((p) >= 14 && (p) <= 17) || ((p) >= A8 && (p) <= A10)) ? (&PCICR) : ((uint8_t *)0))
+#define digitalPinToPCICR(p)    ((((p) >= 8 && (p) <= 11) || ((p) >= 14 && (p) <= 17) || ((p) >= A8 && (p) <= A10)) ? (&PCICPORT_C : ((uint8_t *)0))
 #define digitalPinToPCICRbit(p) 0
 #define digitalPinToPCMSK(p)    ((((p) >= 8 && (p) <= 11) || ((p) >= 14 && (p) <= 17) || ((p) >= A8 && (p) <= A10)) ? (&PCMSK0) : ((uint8_t *)0))
 #define digitalPinToPCMSKbit(p) ( ((p) >= 8 && (p) <= 11) ? (p) - 4 : ((p) == 14 ? 3 : ((p) == 15 ? 1 : ((p) == 16 ? 2 : ((p) == 17 ? 0 : (p - A8 + 4))))))
@@ -74,20 +74,20 @@ extern const uint8_t PROGMEM analog_pin_to_channel_PGM[];
 
 // ATMEL ATMEGA32U4 / ARDUINO LEONARDO
 //
-// D0				PD2					RXD1/INT2
-// D1				PD3					TXD1/INT3
-// D2				PD1		SDA			SDA/INT1
-// D3#				PD0		PWM8/SCL	OC0B/SCL/INT0
-// D4		A6		PD4					ADC8
+// D0				PORT_D2					RXD1/INT2
+// D1				PORT_D3					TXD1/INT3
+// D2				PORT_D1		SDA			SDA/INT1
+// D3#				PORT_D0		PWM8/SCL	OC0B/SCL/INT0
+// D4		A6		PORT_D4					ADC8
 // D5#				PC6		???			OC3A/#OC4A
-// D6#		A7		PD7		FastPWM		#OC4D/ADC10
+// D6#		A7		PORT_D7		FastPWM		#OC4D/ADC10
 // D7				PE6					INT6/AIN0
 //
 // D8		A8		PB4					ADC11/PCINT4
 // D9#		A9		PB5		PWM16		OC1A/#OC4B/ADC12/PCINT5
 // D10#		A10		PB6		PWM16		OC1B/0c4B/ADC13/PCINT6
 // D11#				PB7		PWM8/16		0C0A/OC1C/#RTS/PCINT7
-// D12		A11		PD6					T1/#OC4D/ADC9
+// D12		A11		PORT_D6					T1/#OC4D/ADC9
 // D13#				PC7		PWM10		CLK0/OC4A
 //
 // A0		D18		PF7					ADC7
@@ -104,7 +104,7 @@ extern const uint8_t PROGMEM analog_pin_to_channel_PGM[];
 // MOSI		D16		PB2					MOSI,PCINT2
 // SS		D17		PB0					RXLED,SS/PCINT0
 //
-// TXLED			PD5
+// TXLED			PORT_D5
 // RXLED		    PB0
 // HWB				PE2					HWB
 
@@ -142,57 +142,57 @@ const uint16_t PROGMEM port_to_input_PGM[] = {
 };
 
 const uint8_t PROGMEM digital_pin_to_port_PGM[30] = {
-	PD, // D0 - PD2
-	PD,	// D1 - PD3
-	PD, // D2 - PD1
-	PD,	// D3 - PD0
-	PD,	// D4 - PD4
-	PC, // D5 - PC6
-	PD, // D6 - PD7
-	PE, // D7 - PE6
+	PORT_D, // D0 - PORT_D2
+	PORT_D,	// D1 - PORT_D3
+	PORT_D, // D2 - PORT_D1
+	PORT_D,	// D3 - PORT_D0
+	PORT_D,	// D4 - PORT_D4
+	PORT_C, // D5 - PORT_C6
+	PORT_D, // D6 - PORT_D7
+	PORT_E, // D7 - PE6
 	
-	PB, // D8 - PB4
-	PB,	// D9 - PB5
-	PB, // D10 - PB6
-	PB,	// D11 - PB7
-	PD, // D12 - PD6
-	PC, // D13 - PC7
+	PORT_B, // D8 - PB4
+	PORT_B,	// D9 - PB5
+	PORT_B, // D10 - PB6
+	PORT_B,	// D11 - PB7
+	PORT_D, // D12 - PORT_D6
+	PORT_C, // D13 - PORT_C7
 	
-	PB,	// D14 - MISO - PB3
-	PB,	// D15 - SCK - PB1
-	PB,	// D16 - MOSI - PB2
-	PB,	// D17 - SS - PB0
+	PORT_B,	// D14 - MISO - PB3
+	PORT_B,	// D15 - SCK - PB1
+	PORT_B,	// D16 - MOSI - PB2
+	PORT_B,	// D17 - SS - PB0
 	
-	PF,	// D18 - A0 - PF7
-	PF, // D19 - A1 - PF6
-	PF, // D20 - A2 - PF5
-	PF, // D21 - A3 - PF4
-	PF, // D22 - A4 - PF1
-	PF, // D23 - A5 - PF0
+	PORT_F,	// D18 - A0 - PF7
+	PORT_F, // D19 - A1 - PF6
+	PORT_F, // D20 - A2 - PF5
+	PORT_F, // D21 - A3 - PF4
+	PORT_F, // D22 - A4 - PF1
+	PORT_F, // D23 - A5 - PF0
 	
-	PD, // D24 / D4 - A6 - PD4
-	PD, // D25 / D6 - A7 - PD7
-	PB, // D26 / D8 - A8 - PB4
-	PB, // D27 / D9 - A9 - PB5
-	PB, // D28 / D10 - A10 - PB6
-	PD, // D29 / D12 - A11 - PD6
+	PORT_D, // D24 / D4 - A6 - PORT_D4
+	PORT_D, // D25 / D6 - A7 - PORT_D7
+	PORT_B, // D26 / D8 - A8 - PB4
+	PORT_B, // D27 / D9 - A9 - PB5
+	PORT_B, // D28 / D10 - A10 - PB6
+	PORT_D, // D29 / D12 - A11 - PORT_D6
 };
 
 const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[30] = {
-	_BV(2), // D0 - PD2
-	_BV(3),	// D1 - PD3
-	_BV(1), // D2 - PD1
-	_BV(0),	// D3 - PD0
-	_BV(4),	// D4 - PD4
-	_BV(6), // D5 - PC6
-	_BV(7), // D6 - PD7
+	_BV(2), // D0 - PORT_D2
+	_BV(3),	// D1 - PORT_D3
+	_BV(1), // D2 - PORT_D1
+	_BV(0),	// D3 - PORT_D0
+	_BV(4),	// D4 - PORT_D4
+	_BV(6), // D5 - PORT_C6
+	_BV(7), // D6 - PORT_D7
 	_BV(6), // D7 - PE6
 	
 	_BV(4), // D8 - PB4
 	_BV(5),	// D9 - PB5
 	_BV(6), // D10 - PB6
 	_BV(7),	// D11 - PB7
-	_BV(6), // D12 - PD6
+	_BV(6), // D12 - PORT_D6
 	_BV(7), // D13 - PC7
 	
 	_BV(3),	// D14 - MISO - PB3
@@ -207,12 +207,12 @@ const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[30] = {
 	_BV(1), // D22 - A4 - PF1
 	_BV(0), // D23 - A5 - PF0
 	
-	_BV(4), // D24 / D4 - A6 - PD4
-	_BV(7), // D25 / D6 - A7 - PD7
+	_BV(4), // D24 / D4 - A6 - PORT_D4
+	_BV(7), // D25 / D6 - A7 - PORT_D7
 	_BV(4), // D26 / D8 - A8 - PB4
 	_BV(5), // D27 / D9 - A9 - PB5
 	_BV(6), // D28 / D10 - A10 - PB6
-	_BV(6), // D29 / D12 - A11 - PD6
+	_BV(6), // D29 / D12 - A11 - PORT_D6
 };
 
 const uint8_t PROGMEM digital_pin_to_timer_PGM[16] = {
@@ -244,12 +244,12 @@ const uint8_t PROGMEM analog_pin_to_channel_PGM[12] = {
 	4,	// A3				PF4					ADC4
 	1,	// A4				PF1					ADC1	
 	0,	// A5				PF0					ADC0	
-	8,	// A6		D4		PD4					ADC8
-	10,	// A7		D6		PD7					ADC10
+	8,	// A6		D4		PORT_D4					ADC8
+	10,	// A7		D6		PORT_D7					ADC10
 	11,	// A8		D8		PB4					ADC11
 	12,	// A9		D9		PB5					ADC12
 	13,	// A10		D10		PB6					ADC13
-	9	// A11		D12		PD6					ADC9
+	9	// A11		D12		PORT_D6					ADC9
 };
 
 #endif /* ARDUINO_MAIN */
